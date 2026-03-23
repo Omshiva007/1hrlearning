@@ -1,6 +1,6 @@
 import { prisma } from '../utils/prisma';
 import { AppError } from '../types';
-import { cacheGet, cacheSet, cacheDel } from '../utils/redis';
+import { redis, cacheGet, cacheSet, cacheDel } from '../utils/redis';
 import type { CreateSkillInput, AddUserSkillInput, SkillQueryInput } from '@1hrlearning/shared';
 import { CACHE_TTL } from '@1hrlearning/shared';
 
@@ -79,7 +79,13 @@ export class SkillsService {
       data: { ...input, slug },
     });
 
-    const keys = await redis.keys('skills:list:*');
+    const keys: string[] = [];
+    let cursor = '0';
+    do {
+      const [nextCursor, batch] = await redis.scan(cursor, 'MATCH', 'skills:list:*', 'COUNT', 100);
+      cursor = nextCursor;
+      keys.push(...batch);
+    } while (cursor !== '0');
     if (keys.length > 0) await cacheDel(...keys);
     return skill;
   }
