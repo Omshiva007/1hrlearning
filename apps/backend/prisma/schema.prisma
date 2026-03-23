@@ -1,0 +1,265 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  USER
+  ADMIN
+  MODERATOR
+}
+
+enum SkillLevel {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+  EXPERT
+}
+
+enum SessionStatus {
+  PENDING
+  CONFIRMED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+}
+
+enum ConnectionStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  BLOCKED
+}
+
+enum NotificationType {
+  CONNECTION_REQUEST
+  CONNECTION_ACCEPTED
+  SESSION_REQUEST
+  SESSION_CONFIRMED
+  SESSION_CANCELLED
+  SESSION_REMINDER
+  SESSION_COMPLETED
+  RATING_RECEIVED
+  POINTS_EARNED
+  SYSTEM
+}
+
+enum PointTransactionType {
+  EARNED_TEACHING
+  SPENT_LEARNING
+  BONUS
+  PENALTY
+  REFUND
+}
+
+model User {
+  id                  String    @id @default(cuid())
+  email               String    @unique
+  username            String    @unique
+  displayName         String
+  passwordHash        String
+  bio                 String?
+  avatarUrl           String?
+  timezone            String    @default("UTC")
+  role                UserRole  @default(USER)
+  isVerified          Boolean   @default(false)
+  isActive            Boolean   @default(true)
+  pointsBalance       Int       @default(10)
+  totalSessionsTaught Int       @default(0)
+  totalSessionsLearned Int      @default(0)
+  averageRating       Float?
+  ratingCount         Int       @default(0)
+  lastActiveAt        DateTime?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  skills              UserSkill[]
+  sessionsTeaching    Session[]           @relation("TeacherSessions")
+  sessionsLearning    Session[]           @relation("LearnerSessions")
+  connectionsInitiated Connection[]       @relation("RequesterConnections")
+  connectionsReceived  Connection[]       @relation("AddresseeConnections")
+  notifications       Notification[]
+  pointTransactions   PointTransaction[]
+  ratingsGiven        Rating[]            @relation("RaterRatings")
+  ratingsReceived     Rating[]            @relation("RatedUserRatings")
+  verificationTokens  VerificationToken[]
+  refreshTokens       RefreshToken[]
+
+  @@index([email])
+  @@index([username])
+  @@index([role])
+  @@index([isActive])
+  @@index([createdAt])
+}
+
+model RefreshToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([token])
+}
+
+model VerificationToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  type      String
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([token])
+}
+
+model Skill {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  slug        String   @unique
+  description String?
+  category    String
+  subcategory String?
+  iconUrl     String?
+  userCount   Int      @default(0)
+  sessionCount Int     @default(0)
+  isApproved  Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  userSkills UserSkill[]
+  sessions   Session[]
+
+  @@index([slug])
+  @@index([category])
+  @@index([isApproved])
+  @@index([userCount])
+}
+
+model UserSkill {
+  id                String     @id @default(cuid())
+  userId            String
+  user              User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  skillId           String
+  skill             Skill      @relation(fields: [skillId], references: [id], onDelete: Cascade)
+  level             SkillLevel
+  isTeaching        Boolean    @default(false)
+  isLearning        Boolean    @default(false)
+  description       String?
+  yearsOfExperience Int?
+  endorsementCount  Int        @default(0)
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
+
+  @@unique([userId, skillId])
+  @@index([userId])
+  @@index([skillId])
+  @@index([isTeaching])
+  @@index([isLearning])
+}
+
+model Session {
+  id                String        @id @default(cuid())
+  teacherId         String
+  teacher           User          @relation("TeacherSessions", fields: [teacherId], references: [id])
+  learnerId         String
+  learner           User          @relation("LearnerSessions", fields: [learnerId], references: [id])
+  skillId           String
+  skill             Skill         @relation(fields: [skillId], references: [id])
+  status            SessionStatus @default(PENDING)
+  scheduledAt       DateTime
+  durationMinutes   Int           @default(60)
+  meetingUrl        String?
+  notes             String?
+  pointsTransferred Int           @default(5)
+  completedAt       DateTime?
+  cancelledAt       DateTime?
+  cancelReason      String?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  ratings           Rating[]
+  pointTransactions PointTransaction[]
+
+  @@index([teacherId])
+  @@index([learnerId])
+  @@index([skillId])
+  @@index([status])
+  @@index([scheduledAt])
+}
+
+model Rating {
+  id          String   @id @default(cuid())
+  sessionId   String
+  session     Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  raterId     String
+  rater       User     @relation("RaterRatings", fields: [raterId], references: [id])
+  ratedUserId String
+  ratedUser   User     @relation("RatedUserRatings", fields: [ratedUserId], references: [id])
+  score       Int
+  comment     String?
+  createdAt   DateTime @default(now())
+
+  @@unique([sessionId, raterId])
+  @@index([sessionId])
+  @@index([ratedUserId])
+}
+
+model Connection {
+  id          String           @id @default(cuid())
+  requesterId String
+  requester   User             @relation("RequesterConnections", fields: [requesterId], references: [id])
+  addresseeId String
+  addressee   User             @relation("AddresseeConnections", fields: [addresseeId], references: [id])
+  status      ConnectionStatus @default(PENDING)
+  message     String?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  @@unique([requesterId, addresseeId])
+  @@index([requesterId])
+  @@index([addresseeId])
+  @@index([status])
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      NotificationType
+  title     String
+  message   String
+  data      Json?
+  isRead    Boolean          @default(false)
+  createdAt DateTime         @default(now())
+
+  @@index([userId])
+  @@index([isRead])
+  @@index([createdAt])
+}
+
+model PointTransaction {
+  id           String               @id @default(cuid())
+  userId       String
+  user         User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type         PointTransactionType
+  amount       Int
+  balanceAfter Int
+  description  String
+  sessionId    String?
+  session      Session?             @relation(fields: [sessionId], references: [id])
+  createdAt    DateTime             @default(now())
+
+  @@index([userId])
+  @@index([sessionId])
+  @@index([createdAt])
+}
