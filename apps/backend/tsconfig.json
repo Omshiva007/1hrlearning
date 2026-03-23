@@ -15,7 +15,7 @@
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "paths": {
-      "@1hrlearning/shared": ["../../packages/shared/src"]
+      "@1hrlearning/shared": ["../../packages/shared/dist"]
     }
   },
   "include": ["src/**/*"],

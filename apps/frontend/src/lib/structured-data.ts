@@ -43,6 +43,15 @@ export interface WebSiteSchema {
 
 const SITE_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://1hrlearning.com';
 
+/**
+ * Safely serializes structured data for injection into a <script type="application/ld+json"> tag.
+ * JSON.stringify alone does not escape "</script>" sequences, which could allow a malicious
+ * value (e.g. in a user's displayName or bio) to break out of the script block and inject HTML.
+ */
+export function safeJsonLd(data: unknown): string {
+  return JSON.stringify(data).replace(/</g, '\\u003c').replace(/>/g, '\\u003e').replace(/&/g, '\\u0026');
+}
+
 export function buildPersonSchema(user: {
   displayName: string;
   username: string;

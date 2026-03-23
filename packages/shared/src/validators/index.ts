@@ -55,7 +55,7 @@ export const updateProfileSchema = z.object({
 export const createSkillSchema = z.object({
   name: z.string().min(1, 'Skill name is required').max(100),
   description: z.string().max(500).nullable().optional(),
-  category: z.enum(SKILL_CATEGORIES as [string, ...string[]]),
+  category: z.enum([...SKILL_CATEGORIES] as [string, ...string[]]),
   subcategory: z.string().max(100).nullable().optional(),
 });
 
@@ -70,7 +70,7 @@ export const addUserSkillSchema = z.object({
 
 export const skillQuerySchema = z.object({
   q: z.string().optional(),
-  category: z.enum(SKILL_CATEGORIES as [string, ...string[]]).optional(),
+  category: z.enum([...SKILL_CATEGORIES] as [string, ...string[]]).optional(),
   page: z.coerce.number().int().positive().default(1),
   limit: z.coerce.number().int().positive().max(100).default(20),
 });

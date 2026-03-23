@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import type { Request, Response, NextFunction } from 'express';
 import { sessionsController } from '../controllers/sessions.controller';
 import { requireAuth } from '../middleware/auth';
 import { validate } from '../middleware/validate';
@@ -7,9 +8,9 @@ import type { AuthenticatedRequest } from '../types';
 
 const router = Router();
 
-const auth = requireAuth as never;
-const wrap = (fn: (req: AuthenticatedRequest, res: never, next: never) => Promise<void>) =>
-  (req: never, res: never, next: never) => fn(req as AuthenticatedRequest, res, next);
+const auth = requireAuth as unknown as (req: Request, res: Response, next: NextFunction) => void;
+const wrap = (fn: (req: AuthenticatedRequest, res: Response, next: NextFunction) => Promise<void>) =>
+  (req: Request, res: Response, next: NextFunction) => fn(req as AuthenticatedRequest, res, next);
 
 router.get('/', auth, wrap(sessionsController.list));
 router.get('/:id', auth, wrap(sessionsController.getById));

@@ -3,9 +3,12 @@ import RedisStore from 'rate-limit-redis';
 import { redis } from '../utils/redis';
 import { config } from '../config';
 
+type RedisReply = boolean | number | string | (boolean | number | string)[];
+
 const makeStore = () =>
   new RedisStore({
-    sendCommand: (command: string, ...args: string[]) => redis.call(command, ...args) as Promise<unknown>,
+    sendCommand: ((...args: string[]) =>
+      redis.call(args[0], ...args.slice(1))) as unknown as (...args: string[]) => Promise<RedisReply>,
   });
 
 export const globalRateLimit = rateLimit({

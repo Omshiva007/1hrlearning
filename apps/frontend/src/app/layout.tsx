@@ -5,7 +5,7 @@ import { Providers } from './providers';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { buildMetadata } from '@/lib/metadata';
-import { buildWebSiteSchema } from '@/lib/structured-data';
+import { buildWebSiteSchema, safeJsonLd } from '@/lib/structured-data';
 
 const inter = Inter({ subsets: ['latin'], display: 'swap' });
 
@@ -19,7 +19,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }}
+          dangerouslySetInnerHTML={{ __html: safeJsonLd(websiteSchema) }}
         />
       </head>
       <body className={inter.className}>

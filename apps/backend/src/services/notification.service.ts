@@ -1,4 +1,5 @@
 import { prisma } from '../utils/prisma';
+import { Prisma } from '@prisma/client';
 import { AppError } from '../types';
 import type { NotificationType } from '@1hrlearning/shared';
 
@@ -17,7 +18,7 @@ export class NotificationService {
         type: input.type,
         title: input.title,
         message: input.message,
-        data: input.data ?? null,
+        data: (input.data ?? Prisma.DbNull) as Prisma.InputJsonValue,
       },
     });
   }

@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import { buildProfileMetadata } from '@/lib/metadata';
-import { buildPersonSchema } from '@/lib/structured-data';
+import { buildPersonSchema, safeJsonLd } from '@/lib/structured-data';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -45,7 +45,7 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(personSchema) }}
+        dangerouslySetInnerHTML={{ __html: safeJsonLd(personSchema) }}
       />
       <div className="container mx-auto max-w-4xl px-4 py-8">
         {/* Profile Header */}

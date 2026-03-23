@@ -1,0 +1,14 @@
+title = "1hrLearning Gitleaks Configuration"
+
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Allowlist CI workflow test-only credentials"
+paths = [
+  '''.github/workflows/.*\.yml''',
+]
+regexes = [
+  '''JWT_SECRET:\s+test[-_]''',
+  '''JWT_REFRESH_SECRET:\s+test[-_]''',
+]

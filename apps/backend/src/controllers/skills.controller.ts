@@ -1,11 +1,12 @@
 import type { Request, Response, NextFunction } from 'express';
 import type { AuthenticatedRequest } from '../types';
 import { skillsService } from '../services/skills.service';
+import type { SkillQueryInput } from '@1hrlearning/shared';
 
 export const skillsController = {
   async list(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const result = await skillsService.listSkills(req.query as never);
+      const result = await skillsService.listSkills(req.query as unknown as SkillQueryInput);
       res.json({ success: true, ...result });
     } catch (error) {
       next(error);

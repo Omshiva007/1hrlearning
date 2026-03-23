@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { buildSkillMetadata } from '@/lib/metadata';
-import { buildCourseSchema } from '@/lib/structured-data';
+import { buildCourseSchema, safeJsonLd } from '@/lib/structured-data';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -54,7 +54,7 @@ export default async function SkillDetailPage({ params }: { params: Promise<{ id
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(courseSchema) }}
+        dangerouslySetInnerHTML={{ __html: safeJsonLd(courseSchema) }}
       />
       <div className="container mx-auto max-w-5xl px-4 py-8">
         <div className="mb-2">
