@@ -1,0 +1,116 @@
+export const USER_ROLES = {
+  USER: 'USER',
+  ADMIN: 'ADMIN',
+  MODERATOR: 'MODERATOR',
+} as const;
+
+export const SKILL_LEVELS = {
+  BEGINNER: 'BEGINNER',
+  INTERMEDIATE: 'INTERMEDIATE',
+  ADVANCED: 'ADVANCED',
+  EXPERT: 'EXPERT',
+} as const;
+
+export const SESSION_STATUS = {
+  PENDING: 'PENDING',
+  CONFIRMED: 'CONFIRMED',
+  IN_PROGRESS: 'IN_PROGRESS',
+  COMPLETED: 'COMPLETED',
+  CANCELLED: 'CANCELLED',
+  NO_SHOW: 'NO_SHOW',
+} as const;
+
+export const CONNECTION_STATUS = {
+  PENDING: 'PENDING',
+  ACCEPTED: 'ACCEPTED',
+  REJECTED: 'REJECTED',
+  BLOCKED: 'BLOCKED',
+} as const;
+
+export const NOTIFICATION_TYPES = {
+  CONNECTION_REQUEST: 'CONNECTION_REQUEST',
+  CONNECTION_ACCEPTED: 'CONNECTION_ACCEPTED',
+  SESSION_REQUEST: 'SESSION_REQUEST',
+  SESSION_CONFIRMED: 'SESSION_CONFIRMED',
+  SESSION_CANCELLED: 'SESSION_CANCELLED',
+  SESSION_REMINDER: 'SESSION_REMINDER',
+  SESSION_COMPLETED: 'SESSION_COMPLETED',
+  RATING_RECEIVED: 'RATING_RECEIVED',
+  POINTS_EARNED: 'POINTS_EARNED',
+  SYSTEM: 'SYSTEM',
+} as const;
+
+export const POINT_TRANSACTION_TYPES = {
+  EARNED_TEACHING: 'EARNED_TEACHING',
+  SPENT_LEARNING: 'SPENT_LEARNING',
+  BONUS: 'BONUS',
+  PENALTY: 'PENALTY',
+  REFUND: 'REFUND',
+} as const;
+
+export const POINTS = {
+  INITIAL_BALANCE: 10,
+  PER_SESSION_TAUGHT: 5,
+  PER_SESSION_LEARNED: 5,
+  REGISTRATION_BONUS: 10,
+  REFERRAL_BONUS: 5,
+  MIN_BALANCE_TO_BOOK: 5,
+} as const;
+
+export const SESSION = {
+  DEFAULT_DURATION_MINUTES: 60,
+  MIN_DURATION_MINUTES: 30,
+  MAX_DURATION_MINUTES: 120,
+  REMINDER_MINUTES_BEFORE: 30,
+  AUTO_COMPLETE_HOURS_AFTER: 24,
+} as const;
+
+export const PAGINATION = {
+  DEFAULT_PAGE: 1,
+  DEFAULT_LIMIT: 20,
+  MAX_LIMIT: 100,
+} as const;
+
+export const SKILL_CATEGORIES = [
+  'Technology',
+  'Design',
+  'Business',
+  'Language',
+  'Music',
+  'Art',
+  'Science',
+  'Mathematics',
+  'Writing',
+  'Cooking',
+  'Fitness',
+  'Mindfulness',
+  'Photography',
+  'Finance',
+  'Other',
+] as const;
+
+export type SkillCategory = (typeof SKILL_CATEGORIES)[number];
+
+export const RATING = {
+  MIN: 1,
+  MAX: 5,
+} as const;
+
+export const PASSWORD = {
+  MIN_LENGTH: 8,
+  MAX_LENGTH: 100,
+  SALT_ROUNDS: 12,
+} as const;
+
+export const USERNAME = {
+  MIN_LENGTH: 3,
+  MAX_LENGTH: 30,
+  PATTERN: /^[a-zA-Z0-9_-]+$/,
+} as const;
+
+export const CACHE_TTL = {
+  USER_PROFILE: 300,
+  SKILL_LIST: 600,
+  LEADERBOARD: 60,
+  SESSION_LIST: 120,
+} as const;

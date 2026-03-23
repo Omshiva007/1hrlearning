@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+
+# Disallow private routes
+Disallow: /dashboard
+Disallow: /sessions
+Disallow: /notifications
+Disallow: /api/
+
+# Sitemap
+Sitemap: https://1hrlearning.com/sitemap.xml
