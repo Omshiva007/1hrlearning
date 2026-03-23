@@ -86,5 +86,5 @@ export async function fetchPaginated<T>(
   if (!res.ok) throw new ApiError(res.status, 'Request failed');
 
   const data = await res.json();
-  return { data: data.data ?? [], pagination: data.pagination };
+  return { data: data.data ?? [], pagination: data.pagination ?? { page: 1, limit: 20, total: 0, totalPages: 0, hasNext: false, hasPrev: false } };
 }

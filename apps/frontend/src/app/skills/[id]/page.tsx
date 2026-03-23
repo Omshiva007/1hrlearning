@@ -46,7 +46,7 @@ export default async function SkillDetailPage({ params }: { params: { id: string
   const [skill, teachers] = await Promise.all([getSkill(params.id), getTeachers(params.id)]);
   if (!skill) notFound();
 
-  const courseSchema = buildCourseSchema({ ...skill, slug: skill.slug ?? skill.id });
+  const courseSchema = buildCourseSchema({ ...skill, slug: skill.slug });
 
   return (
     <>

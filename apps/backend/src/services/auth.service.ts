@@ -5,7 +5,7 @@ import { signAccessToken, signRefreshToken, verifyRefreshToken } from '../utils/
 import { redis } from '../utils/redis';
 import { AppError } from '../types';
 import type { RegisterInput, LoginInput } from '@1hrlearning/shared';
-import { POINTS } from '@1hrlearning/shared';
+import { POINTS, PASSWORD } from '@1hrlearning/shared';
 import { config } from '../config';
 
 const REFRESH_TOKEN_TTL_SECONDS = 7 * 24 * 60 * 60;
@@ -25,7 +25,7 @@ export class AuthService {
       throw new AppError('Username already taken', 409);
     }
 
-    const passwordHash = await bcrypt.hash(input.password, 12);
+    const passwordHash = await bcrypt.hash(input.password, PASSWORD.SALT_ROUNDS);
 
     const user = await prisma.$transaction(async (tx) => {
       const newUser = await tx.user.create({

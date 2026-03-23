@@ -11,7 +11,7 @@ interface AuthenticatedSocket extends Socket {
   username: string;
 }
 
-const USER_SOCKET_KEY = (userId: string) => `socket:user:${userId}`;
+const userSocketKey = (userId: string) => `socket:user:${userId}`;
 
 export function createSocketServer(httpServer: HttpServer): SocketServer {
   const io = new SocketServer(httpServer, {
@@ -56,8 +56,8 @@ export function createSocketServer(httpServer: HttpServer): SocketServer {
 
     logger.debug(`Socket connected: ${username} (${userId})`);
 
-    await redis.sadd(USER_SOCKET_KEY(userId), socket.id);
-    await redis.expire(USER_SOCKET_KEY(userId), 86400);
+    await redis.sadd(userSocketKey(userId), socket.id);
+    await redis.expire(userSocketKey(userId), 86400);
 
     socket.join(`user:${userId}`);
 
@@ -89,7 +89,7 @@ export function createSocketServer(httpServer: HttpServer): SocketServer {
     });
 
     socket.on('disconnect', async () => {
-      await redis.srem(USER_SOCKET_KEY(userId), socket.id);
+      await redis.srem(userSocketKey(userId), socket.id);
       logger.debug(`Socket disconnected: ${username} (${userId})`);
     });
   });

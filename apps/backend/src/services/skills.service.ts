@@ -79,13 +79,18 @@ export class SkillsService {
       data: { ...input, slug },
     });
 
-    await cacheDel('skills:list:*');
+    const keys = await redis.keys('skills:list:*');
+    if (keys.length > 0) await cacheDel(...keys);
     return skill;
   }
 
   async addUserSkill(userId: string, input: AddUserSkillInput) {
     const skill = await prisma.skill.findUnique({ where: { id: input.skillId } });
     if (!skill) throw new AppError('Skill not found', 404);
+
+    const existing = await prisma.userSkill.findUnique({
+      where: { userId_skillId: { userId, skillId: input.skillId } },
+    });
 
     const userSkill = await prisma.userSkill.upsert({
       where: { userId_skillId: { userId, skillId: input.skillId } },
@@ -108,10 +113,12 @@ export class SkillsService {
       include: { skill: true },
     });
 
-    await prisma.skill.update({
-      where: { id: input.skillId },
-      data: { userCount: { increment: 1 } },
-    });
+    if (!existing) {
+      await prisma.skill.update({
+        where: { id: input.skillId },
+        data: { userCount: { increment: 1 } },
+      });
+    }
 
     await cacheDel(`user:${userId}:profile`, `skill:${input.skillId}`);
     return userSkill;

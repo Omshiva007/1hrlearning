@@ -41,7 +41,7 @@ export default function RegisterPage() {
       if (error instanceof ApiError) {
         if (error.errors) {
           const flat: Record<string, string> = {};
-          Object.entries(error.errors).forEach(([k, v]) => { flat[k] = v[0]; });
+          Object.entries(error.errors).forEach(([k, v]) => { if (v.length > 0) flat[k] = v[0]; });
           setErrors(flat);
         } else {
           setErrors({ _root: error.message });

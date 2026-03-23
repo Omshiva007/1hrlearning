@@ -5,7 +5,7 @@ import { config } from '../config';
 
 const makeStore = () =>
   new RedisStore({
-    sendCommand: (...args: string[]) => redis.call(...args) as Promise<unknown>,
+    sendCommand: (command: string, ...args: string[]) => redis.call(command, ...args) as Promise<unknown>,
   });
 
 export const globalRateLimit = rateLimit({
