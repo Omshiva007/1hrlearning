@@ -4,7 +4,12 @@ title = "1hrLearning Gitleaks Configuration"
 useDefault = true
 
 [[allowlists]]
+description = "Allowlist historical CI commit that used test-only JWT secrets"
+commits = ["97c0e8e49f499a207d32c7ec0ec93319975eb130"]
+
+[[allowlists]]
 description = "Allowlist CI workflow test-only credentials"
+regexTarget = "line"
 paths = [
   '''.github/workflows/.*\.yml''',
 ]

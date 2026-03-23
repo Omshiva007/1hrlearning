@@ -12,7 +12,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000/api/v1
 
 async function getUser(username: string): Promise<PublicUser | null> {
   try {
-    const res = await fetch(`${API_URL}/users/username/${username}`, {
+    const res = await fetch(`${API_URL}/users/username/${encodeURIComponent(username)}`, {
       next: { revalidate: 300 },
     });
     if (!res.ok) return null;

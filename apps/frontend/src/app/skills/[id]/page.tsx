@@ -14,7 +14,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000/api/v1
 
 async function getSkill(id: string): Promise<Skill | null> {
   try {
-    const res = await fetch(`${API_URL}/skills/${id}`, { next: { revalidate: 600 } });
+    const res = await fetch(`${API_URL}/skills/${encodeURIComponent(id)}`, { next: { revalidate: 600 } });
     if (!res.ok) return null;
     const { data } = await res.json();
     return data;
@@ -25,7 +25,7 @@ async function getSkill(id: string): Promise<Skill | null> {
 
 async function getTeachers(skillId: string) {
   try {
-    const res = await fetch(`${API_URL}/skills/${skillId}/teachers?limit=6`, {
+    const res = await fetch(`${API_URL}/skills/${encodeURIComponent(skillId)}/teachers?limit=6`, {
       next: { revalidate: 300 },
     });
     if (!res.ok) return [];
