@@ -26,15 +26,17 @@ async function getUser(username: string): Promise<PublicUser | null> {
 export async function generateMetadata({
   params,
 }: {
-  params: { username: string };
+  params: Promise<{ username: string }>;
 }): Promise<Metadata> {
-  const user = await getUser(params.username);
+  const { username } = await params;
+  const user = await getUser(username);
   if (!user) return { title: 'User not found' };
   return buildProfileMetadata(user);
 }
 
-export default async function ProfilePage({ params }: { params: { username: string } }) {
-  const user = await getUser(params.username);
+export default async function ProfilePage({ params }: { params: Promise<{ username: string }> }) {
+  const { username } = await params;
+  const user = await getUser(username);
   if (!user) notFound();
 
   const personSchema = buildPersonSchema(user);

@@ -14,7 +14,7 @@
 | Layer | Technology |
 |-------|-----------|
 | Monorepo | Turborepo |
-| Frontend | Next.js 14 (App Router), Tailwind CSS, shadcn/ui |
+| Frontend | Next.js 15 (App Router), Tailwind CSS, shadcn/ui |
 | Auth | NextAuth.js v5, JWT with refresh tokens |
 | State | TanStack Query, Zustand |
 | Real-time | Socket.io |
@@ -32,7 +32,7 @@
 1hrlearning/
 ├── apps/
 │   ├── backend/          # Express.js API server
-│   └── frontend/         # Next.js 14 web app
+│   └── frontend/         # Next.js 15 web app
 ├── packages/
 │   └── shared/           # Shared types, validators, constants
 ├── .github/workflows/    # CI/CD pipelines

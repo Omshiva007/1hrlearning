@@ -36,14 +36,16 @@ async function getTeachers(skillId: string) {
   }
 }
 
-export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
-  const skill = await getSkill(params.id);
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params;
+  const skill = await getSkill(id);
   if (!skill) return { title: 'Skill not found' };
   return buildSkillMetadata(skill);
 }
 
-export default async function SkillDetailPage({ params }: { params: { id: string } }) {
-  const [skill, teachers] = await Promise.all([getSkill(params.id), getTeachers(params.id)]);
+export default async function SkillDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const [skill, teachers] = await Promise.all([getSkill(id), getTeachers(id)]);
   if (!skill) notFound();
 
   const courseSchema = buildCourseSchema({ ...skill, slug: skill.slug });
