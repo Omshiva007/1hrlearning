@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { useAuth } from './useAuth';
 import type { Skill, UserSkill, PaginatedResponse } from '@1hrlearning/shared';
-import type { AddUserSkillInput } from '@1hrlearning/shared';
+import type { AddUserSkillInput, UpdateUserSkillInput } from '@1hrlearning/shared';
 
 export function useSkills(params?: {
   q?: string;
@@ -35,27 +35,51 @@ export function useSkill(id: string) {
   });
 }
 
-export function useAddUserSkill() {
+export function useUserSkills(userId: string) {
+  return useQuery({
+    queryKey: ['users', userId, 'skills'],
+    queryFn: () => api.get<UserSkill[]>(`/users/${userId}/skills`),
+    enabled: !!userId,
+  });
+}
+
+export function useAddUserSkill(userId: string) {
   const queryClient = useQueryClient();
   const { accessToken } = useAuth();
 
   return useMutation({
     mutationFn: (input: AddUserSkillInput) =>
-      api.post<UserSkill>('/skills/user', input, accessToken),
+      api.post<UserSkill>(`/users/${userId}/skills`, input, accessToken),
     onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['users', userId, 'skills'] });
       void queryClient.invalidateQueries({ queryKey: ['user', 'me'] });
     },
   });
 }
 
-export function useRemoveUserSkill() {
+export function useUpdateUserSkill(userId: string) {
+  const queryClient = useQueryClient();
+  const { accessToken } = useAuth();
+
+  return useMutation({
+    mutationFn: ({ skillId, input }: { skillId: string; input: UpdateUserSkillInput }) =>
+      api.put<UserSkill>(`/users/${userId}/skills/${skillId}`, input, accessToken),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['users', userId, 'skills'] });
+      void queryClient.invalidateQueries({ queryKey: ['user', 'me'] });
+    },
+  });
+}
+
+export function useRemoveUserSkill(userId: string) {
   const queryClient = useQueryClient();
   const { accessToken } = useAuth();
 
   return useMutation({
     mutationFn: (skillId: string) =>
-      api.delete(`/skills/user/${skillId}`, accessToken),
+      api.delete(`/users/${userId}/skills/${skillId}`, accessToken),
     onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['users', userId, 'skills'] });
       void queryClient.invalidateQueries({ queryKey: ['user', 'me'] });
     },
   });

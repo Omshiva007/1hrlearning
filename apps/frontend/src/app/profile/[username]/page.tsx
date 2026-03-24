@@ -6,6 +6,8 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { getInitials, formatDate } from '@/lib/utils';
+import { auth } from '@/lib/auth';
+import { SkillsManager } from '@/components/skills/SkillsManager';
 import type { PublicUser } from '@1hrlearning/shared';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000/api/v1';
@@ -36,9 +38,10 @@ export async function generateMetadata({
 
 export default async function ProfilePage({ params }: { params: Promise<{ username: string }> }) {
   const { username } = await params;
-  const user = await getUser(username);
+  const [user, session] = await Promise.all([getUser(username), auth()]);
   if (!user) notFound();
 
+  const isOwnProfile = session?.user?.username === username;
   const personSchema = buildPersonSchema(user);
 
   return (
@@ -121,6 +124,13 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
             </CardContent>
           </Card>
         </div>
+
+        {/* Skills Manager — only visible to the profile owner */}
+        {isOwnProfile && (
+          <div className="mt-6">
+            <SkillsManager userId={user.id} />
+          </div>
+        )}
       </div>
     </>
   );

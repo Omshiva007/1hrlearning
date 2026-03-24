@@ -25,6 +25,15 @@ const PUBLIC_USER_SELECT = {
   },
 };
 
+function transformUser(user: { skills: { isTeaching: boolean; isLearning: boolean; [key: string]: unknown }[]; [key: string]: unknown }) {
+  const { skills, ...rest } = user;
+  return {
+    ...rest,
+    teachingSkills: skills.filter((s) => s.isTeaching),
+    learningSkills: skills.filter((s) => s.isLearning),
+  };
+}
+
 export class UsersService {
   async getUserById(id: string) {
     const cached = await cacheGet<Record<string, unknown>>(`user:${id}:profile`);
@@ -37,8 +46,9 @@ export class UsersService {
 
     if (!user) throw new AppError('User not found', 404);
 
-    await cacheSet(`user:${id}:profile`, user, CACHE_TTL.USER_PROFILE);
-    return user;
+    const transformed = transformUser(user);
+    await cacheSet(`user:${id}:profile`, transformed, CACHE_TTL.USER_PROFILE);
+    return transformed;
   }
 
   async getUserByUsername(username: string) {
@@ -52,8 +62,9 @@ export class UsersService {
 
     if (!user) throw new AppError('User not found', 404);
 
-    await cacheSet(`user:username:${username}`, user, CACHE_TTL.USER_PROFILE);
-    return user;
+    const transformed = transformUser(user);
+    await cacheSet(`user:username:${username}`, transformed, CACHE_TTL.USER_PROFILE);
+    return transformed;
   }
 
   async updateProfile(userId: string, input: UpdateProfileInput) {
@@ -68,8 +79,9 @@ export class UsersService {
       select: PUBLIC_USER_SELECT,
     });
 
+    const transformed = transformUser(user);
     await cacheDel(`user:${userId}:profile`, `user:username:${user.username}`);
-    return user;
+    return transformed;
   }
 
   async searchUsers(query: string, page: number, limit: number) {
@@ -101,7 +113,7 @@ export class UsersService {
     ]);
 
     return {
-      data: users,
+      data: users.map(transformUser),
       pagination: {
         page,
         limit,
