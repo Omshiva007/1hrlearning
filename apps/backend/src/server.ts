@@ -6,7 +6,6 @@ import cors from 'cors';
 import compression from 'compression';
 import cookieParser from 'cookie-parser';
 import morgan from 'morgan';
-import csrfProtection from './middleware/csrf';
 import * as Sentry from '@sentry/node';
 import { config } from './config';
 import { logger } from './utils/logger';
@@ -67,8 +66,8 @@ app.use(globalRateLimit);
 // Auth routes are public - no CSRF protection required
 app.use('/api/v1/auth', authRoutes);
 
-// All other API routes require CSRF protection
-app.use('/api/v1', csrfProtection, apiRoutes);
+// All other API routes
+app.use('/api/v1', apiRoutes);
 
 app.get('/', (_req, res) => {
   res.json({
