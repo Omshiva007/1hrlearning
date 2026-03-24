@@ -29,6 +29,11 @@ export function Header() {
               <Link href="/sessions" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
                 Sessions
               </Link>
+              {user?.role === 'ADMIN' && (
+                <Link href="/admin/dashboard" className="text-sm font-medium text-primary hover:text-primary/80 transition-colors">
+                  🔐 Admin
+                </Link>
+              )}
             </>
           )}
         </nav>
