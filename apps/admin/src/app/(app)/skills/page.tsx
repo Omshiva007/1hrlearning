@@ -1,7 +1,12 @@
 'use client';
 
 import { useState } from 'react';
-import { useAdminSkills, useAdminCreateSkill, useAdminUpdateSkill, useAdminDeleteSkill } from '@/hooks/useAdmin';
+import {
+  useAdminSkills,
+  useAdminCreateSkill,
+  useAdminUpdateSkill,
+  useAdminDeleteSkill,
+} from '@/hooks/useAdmin';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -24,7 +29,7 @@ const DEFAULT_FORM: SkillForm = {
   isApproved: true,
 };
 
-export default function AdminSkillsPage() {
+export default function SkillsPage() {
   const [search, setSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
   const [page, setPage] = useState(1);
@@ -44,8 +49,14 @@ export default function AdminSkillsPage() {
   const updateSkill = useAdminUpdateSkill();
   const deleteSkill = useAdminDeleteSkill();
 
-  const skills = (data as { data: Skill[]; pagination: unknown } | undefined)?.data ?? [];
-  const pagination = (data as { data: Skill[]; pagination: { page: number; totalPages: number; total: number } } | undefined)?.pagination;
+  const skills =
+    (data as { data: Skill[]; pagination: unknown } | undefined)?.data ?? [];
+  const pagination = (
+    data as {
+      data: Skill[];
+      pagination: { page: number; totalPages: number; total: number };
+    } | undefined
+  )?.pagination;
 
   function openCreateForm() {
     setEditingSkill(null);
@@ -134,21 +145,37 @@ export default function AdminSkillsPage() {
         <Input
           placeholder="Search skills…"
           value={search}
-          onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+          onChange={(e) => {
+            setSearch(e.target.value);
+            setPage(1);
+          }}
           className="max-w-xs"
         />
         <select
           value={categoryFilter}
-          onChange={(e) => { setCategoryFilter(e.target.value); setPage(1); }}
+          onChange={(e) => {
+            setCategoryFilter(e.target.value);
+            setPage(1);
+          }}
           className="rounded-md border border-input bg-background px-3 py-2 text-sm"
         >
           <option value="">All Categories</option>
           {SKILL_CATEGORIES.map((cat) => (
-            <option key={cat} value={cat}>{cat}</option>
+            <option key={cat} value={cat}>
+              {cat}
+            </option>
           ))}
         </select>
         {(search || categoryFilter) && (
-          <Button variant="outline" size="sm" onClick={() => { setSearch(''); setCategoryFilter(''); setPage(1); }}>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              setSearch('');
+              setCategoryFilter('');
+              setPage(1);
+            }}
+          >
             Clear
           </Button>
         )}
@@ -176,7 +203,9 @@ export default function AdminSkillsPage() {
                   className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                 >
                   {SKILL_CATEGORIES.map((cat) => (
-                    <option key={cat} value={cat}>{cat}</option>
+                    <option key={cat} value={cat}>
+                      {cat}
+                    </option>
                   ))}
                 </select>
               </div>
@@ -197,7 +226,9 @@ export default function AdminSkillsPage() {
                     checked={form.isApproved}
                     onChange={(e) => setForm((f) => ({ ...f, isApproved: e.target.checked }))}
                   />
-                  <label htmlFor="isApproved" className="text-sm">Approved (visible to users)</label>
+                  <label htmlFor="isApproved" className="text-sm">
+                    Approved (visible to users)
+                  </label>
                 </div>
               </div>
             </div>
@@ -241,7 +272,9 @@ export default function AdminSkillsPage() {
           <p className="text-4xl mb-3">🛠️</p>
           <p className="font-medium">No skills found</p>
           <p className="text-sm mt-1">
-            {search || categoryFilter ? 'Try adjusting your filters' : 'Click "+ Add Skill" to create the first skill'}
+            {search || categoryFilter
+              ? 'Try adjusting your filters'
+              : 'Click "+ Add Skill" to create the first skill'}
           </p>
         </div>
       ) : (
@@ -262,22 +295,32 @@ export default function AdminSkillsPage() {
                   <td className="p-3">
                     <p className="font-medium">{skill.name}</p>
                     {skill.description && (
-                      <p className="text-xs text-muted-foreground line-clamp-1 mt-0.5">{skill.description}</p>
+                      <p className="text-xs text-muted-foreground line-clamp-1 mt-0.5">
+                        {skill.description}
+                      </p>
                     )}
                   </td>
                   <td className="p-3">
-                    <Badge variant="outline" className="text-xs">{skill.category}</Badge>
+                    <Badge variant="outline" className="text-xs">
+                      {skill.category}
+                    </Badge>
                     {skill.subcategory && (
-                      <span className="text-xs text-muted-foreground ml-1">{skill.subcategory}</span>
+                      <span className="text-xs text-muted-foreground ml-1">
+                        {skill.subcategory}
+                      </span>
                     )}
                   </td>
                   <td className="p-3 hidden md:table-cell">
                     <span className="text-muted-foreground">{skill.userCount}</span>
                   </td>
                   <td className="p-3 hidden md:table-cell">
-                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-                      skill.isApproved ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
-                    }`}>
+                    <span
+                      className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                        skill.isApproved
+                          ? 'bg-green-100 text-green-700'
+                          : 'bg-yellow-100 text-yellow-700'
+                      }`}
+                    >
                       {skill.isApproved ? 'Approved' : 'Pending'}
                     </span>
                   </td>

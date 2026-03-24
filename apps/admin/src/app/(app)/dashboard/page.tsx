@@ -1,9 +1,10 @@
 'use client';
 
-import { useAdminDashboard } from '@/hooks/useAdmin';
-import { StatsCard } from '@/components/admin/StatsCard';
+import Link from 'next/link';
+import { useAdminDashboard, type AdminStats } from '@/hooks/useAdmin';
+import { StatsCard } from '@/components/StatsCard';
 
-export default function AdminDashboardPage() {
+export default function DashboardPage() {
   const { data, isLoading, error } = useAdminDashboard();
 
   if (isLoading) {
@@ -28,10 +29,10 @@ export default function AdminDashboardPage() {
     );
   }
 
-  const stats = data?.stats;
-  const categoryBreakdown = data?.categoryBreakdown ?? [];
-  const recentUsers = data?.recentUsers ?? [];
-  const recentSkills = data?.recentSkills ?? [];
+  const stats = (data as AdminStats | undefined)?.stats;
+  const categoryBreakdown = (data as AdminStats | undefined)?.categoryBreakdown ?? [];
+  const recentUsers = (data as AdminStats | undefined)?.recentUsers ?? [];
+  const recentSkills = (data as AdminStats | undefined)?.recentSkills ?? [];
 
   return (
     <div className="p-8">
@@ -72,7 +73,9 @@ export default function AdminDashboardPage() {
         <div className="rounded-lg border bg-card p-6">
           <div className="flex items-center justify-between mb-4">
             <h2 className="font-semibold">Recent Users</h2>
-            <a href="/admin/users" className="text-xs text-primary hover:underline">View all →</a>
+            <Link href="/users" className="text-xs text-primary hover:underline">
+              View all →
+            </Link>
           </div>
           {recentUsers.length === 0 ? (
             <p className="text-sm text-muted-foreground">No users yet</p>
@@ -84,13 +87,15 @@ export default function AdminDashboardPage() {
                     <p className="font-medium">{user.displayName}</p>
                     <p className="text-xs text-muted-foreground">{user.email}</p>
                   </div>
-                  <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-                    user.role === 'ADMIN'
-                      ? 'bg-red-100 text-red-700'
-                      : user.role === 'MODERATOR'
-                      ? 'bg-yellow-100 text-yellow-700'
-                      : 'bg-green-100 text-green-700'
-                  }`}>
+                  <span
+                    className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                      user.role === 'ADMIN'
+                        ? 'bg-red-100 text-red-700'
+                        : user.role === 'MODERATOR'
+                          ? 'bg-yellow-100 text-yellow-700'
+                          : 'bg-green-100 text-green-700'
+                    }`}
+                  >
                     {user.role}
                   </span>
                 </div>
@@ -104,7 +109,9 @@ export default function AdminDashboardPage() {
       <div className="rounded-lg border bg-card p-6">
         <div className="flex items-center justify-between mb-4">
           <h2 className="font-semibold">Recent Skills</h2>
-          <a href="/admin/skills" className="text-xs text-primary hover:underline">View all →</a>
+          <Link href="/skills" className="text-xs text-primary hover:underline">
+            View all →
+          </Link>
         </div>
         {recentSkills.length === 0 ? (
           <p className="text-sm text-muted-foreground">No skills yet</p>
@@ -113,7 +120,9 @@ export default function AdminDashboardPage() {
             {recentSkills.map((skill) => (
               <div key={skill.id} className="p-3 border rounded-md text-sm">
                 <p className="font-medium">{skill.name}</p>
-                <p className="text-xs text-muted-foreground">{skill.category} · {skill.userCount} users</p>
+                <p className="text-xs text-muted-foreground">
+                  {skill.category} · {skill.userCount} users
+                </p>
               </div>
             ))}
           </div>

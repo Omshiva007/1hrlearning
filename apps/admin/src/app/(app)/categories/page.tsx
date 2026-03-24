@@ -1,9 +1,9 @@
 'use client';
 
-import { useAdminCategories } from '@/hooks/useAdmin';
-import type { AdminCategory } from '@/hooks/useAdmin';
+import Link from 'next/link';
+import { useAdminCategories, type AdminCategory } from '@/hooks/useAdmin';
 
-export default function AdminCategoriesPage() {
+export default function CategoriesPage() {
   const { data: categories, isLoading, error } = useAdminCategories();
 
   return (
@@ -29,7 +29,10 @@ export default function AdminCategoriesPage() {
         <>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {(categories ?? []).map((cat: AdminCategory) => (
-              <div key={cat.name} className="rounded-lg border bg-card p-5 hover:shadow-sm transition-shadow">
+              <div
+                key={cat.name}
+                className="rounded-lg border bg-card p-5 hover:shadow-sm transition-shadow"
+              >
                 <div className="flex items-start justify-between">
                   <div>
                     <h3 className="font-semibold">{cat.name}</h3>
@@ -37,19 +40,23 @@ export default function AdminCategoriesPage() {
                       {cat.skillCount} {cat.skillCount === 1 ? 'skill' : 'skills'}
                     </p>
                   </div>
-                  <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-                    cat.skillCount > 0 ? 'bg-green-100 text-green-700' : 'bg-muted text-muted-foreground'
-                  }`}>
+                  <span
+                    className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                      cat.skillCount > 0
+                        ? 'bg-green-100 text-green-700'
+                        : 'bg-muted text-muted-foreground'
+                    }`}
+                  >
                     {cat.skillCount > 0 ? 'Active' : 'Empty'}
                   </span>
                 </div>
                 <div className="mt-3 pt-3 border-t">
-                  <a
-                    href={`/admin/skills?category=${encodeURIComponent(cat.name)}`}
+                  <Link
+                    href={`/skills?category=${encodeURIComponent(cat.name)}`}
                     className="text-xs text-primary hover:underline"
                   >
                     View skills in {cat.name} →
-                  </a>
+                  </Link>
                 </div>
               </div>
             ))}
@@ -57,10 +64,14 @@ export default function AdminCategoriesPage() {
 
           <div className="mt-8 rounded-lg border bg-muted/30 p-4 text-sm text-muted-foreground">
             <p>
-              <strong>Note:</strong> Categories are system-defined. To add new categories or modify existing ones,
-              update the <code className="bg-muted px-1 py-0.5 rounded text-xs">SKILL_CATEGORIES</code> constant
-              in the shared package. To add skills to a category, use the{' '}
-              <a href="/admin/skills" className="text-primary hover:underline">Skills Management</a> page.
+              <strong>Note:</strong> Categories are system-defined. To add new categories or modify
+              existing ones, update the{' '}
+              <code className="bg-muted px-1 py-0.5 rounded text-xs">SKILL_CATEGORIES</code>{' '}
+              constant in the shared package. To add skills to a category, use the{' '}
+              <Link href="/skills" className="text-primary hover:underline">
+                Skills Management
+              </Link>{' '}
+              page.
             </p>
           </div>
         </>

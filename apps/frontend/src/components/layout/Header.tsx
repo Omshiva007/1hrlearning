@@ -30,9 +30,14 @@ export function Header() {
                 Sessions
               </Link>
               {user?.role === 'ADMIN' && (
-                <Link href="/admin/dashboard" className="text-sm font-medium text-primary hover:text-primary/80 transition-colors">
+                <a
+                  href={process.env.NEXT_PUBLIC_ADMIN_URL ?? 'http://localhost:3001'}
+                  className="text-sm font-medium text-primary hover:text-primary/80 transition-colors"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
                   🔐 Admin
-                </Link>
+                </a>
               )}
             </>
           )}
