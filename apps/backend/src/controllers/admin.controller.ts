@@ -3,7 +3,7 @@ import type { AuthenticatedRequest } from '../types';
 import { prisma } from '../utils/prisma';
 import { AppError } from '../types';
 import { redis, cacheGet, cacheSet, cacheDel } from '../utils/redis';
-import { SKILL_CATEGORIES } from '@1hrlearning/shared';
+import { SKILL_CATEGORIES, USER_ROLES } from '@1hrlearning/shared';
 
 function slugify(text: string): string {
   return text
@@ -12,6 +12,15 @@ function slugify(text: string): string {
     .replace(/[\s_-]+/g, '-')
     .replace(/^-+|-+$/g, '');
 }
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+function validateId(id: string): void {
+  if (!UUID_RE.test(id)) throw new AppError('Invalid ID format', 400);
+}
+
+const VALID_ROLES = Object.values(USER_ROLES) as string[];
+const VALID_CATEGORIES = SKILL_CATEGORIES as readonly string[];
 
 async function invalidateSkillsCaches(...extraKeys: string[]): Promise<void> {
   const keys: string[] = [...extraKeys, 'admin:dashboard'];
@@ -91,6 +100,11 @@ export const adminController = {
       const limitNum = Math.min(100, Math.max(1, parseInt(limit, 10) || 20));
       const skip = (pageNum - 1) * limitNum;
 
+      if (q && q.length > 100) throw new AppError('Search query too long', 400);
+      if (category && !VALID_CATEGORIES.includes(category)) {
+        throw new AppError('Invalid category', 400);
+      }
+
       const where = {
         ...(q ? { name: { contains: q, mode: 'insensitive' as const } } : {}),
         ...(category ? { category } : {}),
@@ -137,6 +151,15 @@ export const adminController = {
       if (!name || !category) {
         throw new AppError('Name and category are required', 400);
       }
+      if (typeof name !== 'string' || name.trim().length === 0 || name.trim().length > 100) {
+        throw new AppError('Name must be a non-empty string up to 100 characters', 400);
+      }
+      if (!VALID_CATEGORIES.includes(category)) {
+        throw new AppError('Invalid category', 400);
+      }
+      if (description !== undefined && (typeof description !== 'string' || description.length > 500)) {
+        throw new AppError('Description must be a string up to 500 characters', 400);
+      }
 
       const slug = slugify(name);
       const existing = await prisma.skill.findFirst({
@@ -167,6 +190,7 @@ export const adminController = {
   async updateSkill(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
     try {
       const { id } = req.params;
+      validateId(id);
       const { name, description, category, subcategory, iconUrl, isApproved } = req.body as {
         name?: string;
         description?: string;
@@ -175,6 +199,16 @@ export const adminController = {
         iconUrl?: string;
         isApproved?: boolean;
       };
+
+      if (name !== undefined && (typeof name !== 'string' || name.trim().length === 0 || name.trim().length > 100)) {
+        throw new AppError('Name must be a non-empty string up to 100 characters', 400);
+      }
+      if (category !== undefined && !VALID_CATEGORIES.includes(category)) {
+        throw new AppError('Invalid category', 400);
+      }
+      if (description !== undefined && (typeof description !== 'string' || description.length > 500)) {
+        throw new AppError('Description must be a string up to 500 characters', 400);
+      }
 
       const existing = await prisma.skill.findUnique({ where: { id } });
       if (!existing) throw new AppError('Skill not found', 404);
@@ -203,6 +237,7 @@ export const adminController = {
   async deleteSkill(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
     try {
       const { id } = req.params;
+      validateId(id);
 
       const existing = await prisma.skill.findUnique({ where: { id } });
       if (!existing) throw new AppError('Skill not found', 404);
@@ -248,6 +283,11 @@ export const adminController = {
       const pageNum = Math.max(1, parseInt(page, 10) || 1);
       const limitNum = Math.min(100, Math.max(1, parseInt(limit, 10) || 20));
       const skip = (pageNum - 1) * limitNum;
+
+      if (q && q.length > 100) throw new AppError('Search query too long', 400);
+      if (role && !VALID_ROLES.includes(role)) {
+        throw new AppError('Invalid role filter', 400);
+      }
 
       const where = {
         ...(q
@@ -306,6 +346,7 @@ export const adminController = {
   async getUserById(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
     try {
       const { id } = req.params;
+      validateId(id);
 
       const user = await prisma.user.findUnique({
         where: { id },
@@ -344,9 +385,10 @@ export const adminController = {
   async updateUserRole(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
     try {
       const { id } = req.params;
+      validateId(id);
       const { role } = req.body as { role: string };
 
-      if (!['USER', 'ADMIN', 'MODERATOR'].includes(role)) {
+      if (!role || !VALID_ROLES.includes(role)) {
         throw new AppError('Invalid role', 400);
       }
 
@@ -374,6 +416,7 @@ export const adminController = {
   async updateUserStatus(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
     try {
       const { id } = req.params;
+      validateId(id);
       const { isActive } = req.body as { isActive: boolean };
 
       // Prevent deactivating own account
