@@ -1,6 +1,8 @@
 export type UserRole = 'USER' | 'ADMIN' | 'MODERATOR';
 export type SkillLevel = 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED' | 'EXPERT';
 export type SessionStatus = 'PENDING' | 'CONFIRMED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED' | 'NO_SHOW';
+export type SessionType = 'TEACHING' | 'QUERY_CLARIFICATION';
+export type SessionApplicationStatus = 'PENDING' | 'ACCEPTED' | 'REJECTED';
 export type ConnectionStatus = 'PENDING' | 'ACCEPTED' | 'REJECTED' | 'BLOCKED';
 export type NotificationType =
   | 'CONNECTION_REQUEST'
@@ -12,6 +14,9 @@ export type NotificationType =
   | 'SESSION_COMPLETED'
   | 'RATING_RECEIVED'
   | 'POINTS_EARNED'
+  | 'SESSION_APPLIED'
+  | 'SESSION_APPLICATION_ACCEPTED'
+  | 'SESSION_APPLICATION_REJECTED'
   | 'SYSTEM';
 export type PointTransactionType = 'EARNED_TEACHING' | 'SPENT_LEARNING' | 'BONUS' | 'PENALTY' | 'REFUND';
 
@@ -26,6 +31,8 @@ export interface User {
   role: UserRole;
   isVerified: boolean;
   isActive: boolean;
+  isDiscoverable: boolean;
+  adEmailOptOut: boolean;
   pointsBalance: number;
   totalSessionsTaught: number;
   totalSessionsLearned: number;
@@ -43,6 +50,7 @@ export interface PublicUser {
   avatarUrl: string | null;
   timezone: string;
   isVerified: boolean;
+  isDiscoverable: boolean;
   pointsBalance: number;
   totalSessionsTaught: number;
   totalSessionsLearned: number;
@@ -83,10 +91,14 @@ export interface UserSkill {
 export interface Session {
   id: string;
   teacherId: string;
-  learnerId: string;
+  learnerId: string | null;
   skillId: string;
   skill: Skill;
   status: SessionStatus;
+  sessionType: SessionType;
+  isPublic: boolean;
+  applicationDeadline: Date | null;
+  maxLearners: number;
   scheduledAt: Date;
   durationMinutes: number;
   meetingUrl: string | null;
@@ -94,6 +106,17 @@ export interface Session {
   teacherRating: Rating | null;
   learnerRating: Rating | null;
   pointsTransferred: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface SessionApplication {
+  id: string;
+  sessionId: string;
+  applicantId: string;
+  applicant?: PublicUser;
+  status: SessionApplicationStatus;
+  message: string | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -159,9 +182,25 @@ export interface ApiResponse<T = void> {
   errors?: Record<string, string[]>;
 }
 
+export interface MatchScoreFactors {
+  skillOverlap: number;
+  reciprocityBonus: number;
+  ratingBonus: number;
+  activityBonus: number;
+  mutualExchangeBonus: number;
+}
+
 export interface MatchScore {
   userId: string;
   user: PublicUser;
   score: number;
   matchedSkills: Skill[];
+  scoreFactors: MatchScoreFactors;
+  canTeachMe: Skill[];
+  iCanTeach: Skill[];
 }
+
+export interface AdPreference {
+  adEmailOptOut: boolean;
+}
+

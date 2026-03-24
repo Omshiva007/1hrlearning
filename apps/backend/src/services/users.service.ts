@@ -12,6 +12,7 @@ const PUBLIC_USER_SELECT = {
   avatarUrl: true,
   timezone: true,
   isVerified: true,
+  isDiscoverable: true,
   pointsBalance: true,
   totalSessionsTaught: true,
   totalSessionsLearned: true,
@@ -75,8 +76,10 @@ export class UsersService {
         ...(input.bio !== undefined ? { bio: input.bio } : {}),
         ...(input.avatarUrl !== undefined ? { avatarUrl: input.avatarUrl } : {}),
         ...(input.timezone !== undefined ? { timezone: input.timezone } : {}),
+        ...(input.isDiscoverable !== undefined ? { isDiscoverable: input.isDiscoverable } : {}),
+        ...(input.adEmailOptOut !== undefined ? { adEmailOptOut: input.adEmailOptOut } : {}),
       },
-      select: PUBLIC_USER_SELECT,
+      select: { ...PUBLIC_USER_SELECT, adEmailOptOut: true },
     });
 
     const transformed = transformUser(user);
@@ -141,6 +144,24 @@ export class UsersService {
       orderBy: { totalSessionsTaught: 'desc' },
       take: limit,
     });
+  }
+
+  async getAdPreferences(userId: string) {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { adEmailOptOut: true },
+    });
+    if (!user) throw new AppError('User not found', 404);
+    return { adEmailOptOut: user.adEmailOptOut };
+  }
+
+  async updateAdPreferences(userId: string, adEmailOptOut: boolean) {
+    const user = await prisma.user.update({
+      where: { id: userId },
+      data: { adEmailOptOut },
+      select: { adEmailOptOut: true },
+    });
+    return { adEmailOptOut: user.adEmailOptOut };
   }
 
   async deactivateAccount(userId: string) {

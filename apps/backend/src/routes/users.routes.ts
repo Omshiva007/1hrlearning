@@ -13,6 +13,8 @@ const auth = requireAuth as unknown as (req: Request, res: Response, next: NextF
 router.get('/search', usersController.search);
 router.get('/leaderboard', usersController.getLeaderboard);
 router.get('/matches', auth, (req, res, next) => usersController.getMatches(req as AuthenticatedRequest, res, next));
+router.get('/ad-preferences', auth, (req, res, next) => usersController.getAdPreferences(req as AuthenticatedRequest, res, next));
+router.patch('/ad-preferences', auth, (req, res, next) => usersController.updateAdPreferences(req as AuthenticatedRequest, res, next));
 router.get('/username/:username', usersController.getByUsername);
 router.get('/:id', usersController.getById);
 router.put('/me', auth, validate(updateProfileSchema), (req, res, next) => usersController.updateProfile(req as AuthenticatedRequest, res, next));
