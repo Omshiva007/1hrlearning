@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { Button } from '@/components/ui/button';
@@ -13,6 +13,8 @@ interface SettingsClientProps {
 interface ProfileSettings {
   isDiscoverable: boolean;
   adEmailOptOut: boolean;
+  defaultMeetingProvider?: 'ZOOM' | 'GOOGLE_MEET' | 'CUSTOM' | null;
+  defaultMeetingUrl?: string | null;
 }
 
 export function SettingsClient({ token }: SettingsClientProps) {
@@ -41,6 +43,15 @@ export function SettingsClient({ token }: SettingsClientProps) {
   });
 
   const [saved, setSaved] = useState('');
+  const [meetingProvider, setMeetingProvider] = useState<'ZOOM' | 'GOOGLE_MEET' | 'CUSTOM'>('ZOOM');
+  const [meetingUrl, setMeetingUrl] = useState<string | null>(null);
+  const profileData = profileQuery.data as ProfileSettings | undefined;
+
+  useEffect(() => {
+    if (!profileData) return;
+    setMeetingProvider(profileData.defaultMeetingProvider ?? 'ZOOM');
+    setMeetingUrl(profileData.defaultMeetingUrl ?? null);
+  }, [profileData]);
 
   const handleDiscoverable = async (value: boolean) => {
     await updateProfileMutation.mutateAsync({ isDiscoverable: value });
@@ -54,11 +65,51 @@ export function SettingsClient({ token }: SettingsClientProps) {
     setTimeout(() => setSaved(''), 2000);
   };
 
+  const handleMeetingSave = async () => {
+    await updateProfileMutation.mutateAsync({
+      defaultMeetingProvider: meetingProvider,
+      defaultMeetingUrl: meetingUrl,
+    });
+    setSaved('meeting');
+    setTimeout(() => setSaved(''), 2000);
+  };
+
   const isDiscoverable = (profileQuery.data as { isDiscoverable?: boolean })?.isDiscoverable ?? true;
   const adEmailOptOut = adPrefsQuery.data?.adEmailOptOut ?? false;
 
   return (
     <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>Default Meeting Link</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <p className="text-xs text-muted-foreground">
+            Required to create teaching sessions. You can still override this per session.
+          </p>
+          <select
+            value={meetingProvider}
+            onChange={(e) => setMeetingProvider(e.target.value as 'ZOOM' | 'GOOGLE_MEET' | 'CUSTOM')}
+            className="w-full border rounded-md px-3 py-2 text-sm"
+          >
+            <option value="ZOOM">Zoom</option>
+            <option value="GOOGLE_MEET">Google Meet</option>
+            <option value="CUSTOM">Custom</option>
+          </select>
+          <input
+            type="url"
+            placeholder="https://..."
+            value={meetingUrl ?? ''}
+            onChange={(e) => setMeetingUrl(e.target.value || null)}
+            className="w-full border rounded-md px-3 py-2 text-sm"
+          />
+          <Button onClick={() => void handleMeetingSave()} disabled={updateProfileMutation.isPending || profileQuery.isLoading}>
+            Save Meeting Defaults
+          </Button>
+          {saved === 'meeting' && <p className="text-xs text-green-600">✓ Meeting defaults saved</p>}
+        </CardContent>
+      </Card>
+
       {/* Privacy Settings */}
       <Card>
         <CardHeader>

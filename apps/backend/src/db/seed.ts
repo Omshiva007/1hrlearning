@@ -151,6 +151,8 @@ async function main() {
         isVerified: true,
         isActive: true,
         pointsBalance: 9999,
+        defaultMeetingProvider: 'ZOOM',
+        defaultMeetingUrl: 'https://zoom.us/j/10000000001',
       },
     });
 
@@ -230,6 +232,8 @@ async function main() {
             ratingCount: Math.floor(Math.random() * 10) + 1,
             totalSessionsTaught: Math.floor(Math.random() * 20),
             totalSessionsLearned: Math.floor(Math.random() * 15),
+            defaultMeetingProvider: 'ZOOM',
+            defaultMeetingUrl: `https://zoom.us/j/${String(Math.floor(Math.random() * 9_000_000_000) + 1_000_000_000)}`,
           },
         });
 
@@ -305,6 +309,7 @@ async function main() {
               isPublic: true,
               sessionType: 'TEACHING',
               maxLearners: 1,
+              meetingUrl: 'https://zoom.us/j/10000000002',
               notes: 'Intro to React hooks and state management. No prior React experience needed, just basic JavaScript.',
               applicationDeadline: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
             },

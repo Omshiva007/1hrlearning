@@ -13,6 +13,8 @@ const PUBLIC_USER_SELECT = {
   timezone: true,
   isVerified: true,
   isDiscoverable: true,
+  defaultMeetingProvider: true,
+  defaultMeetingUrl: true,
   pointsBalance: true,
   totalSessionsTaught: true,
   totalSessionsLearned: true,
@@ -78,6 +80,8 @@ export class UsersService {
         ...(input.timezone !== undefined ? { timezone: input.timezone } : {}),
         ...(input.isDiscoverable !== undefined ? { isDiscoverable: input.isDiscoverable } : {}),
         ...(input.adEmailOptOut !== undefined ? { adEmailOptOut: input.adEmailOptOut } : {}),
+        ...(input.defaultMeetingProvider !== undefined ? { defaultMeetingProvider: input.defaultMeetingProvider } : {}),
+        ...(input.defaultMeetingUrl !== undefined ? { defaultMeetingUrl: input.defaultMeetingUrl } : {}),
       },
       select: { ...PUBLIC_USER_SELECT, adEmailOptOut: true },
     });

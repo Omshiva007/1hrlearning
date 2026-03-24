@@ -17,6 +17,7 @@ export type NotificationType =
   | 'SESSION_APPLIED'
   | 'SESSION_APPLICATION_ACCEPTED'
   | 'SESSION_APPLICATION_REJECTED'
+  | 'SESSION_SKILL_MATCH'
   | 'SYSTEM';
 export type PointTransactionType = 'EARNED_TEACHING' | 'SPENT_LEARNING' | 'BONUS' | 'PENALTY' | 'REFUND';
 
@@ -33,6 +34,8 @@ export interface User {
   isActive: boolean;
   isDiscoverable: boolean;
   adEmailOptOut: boolean;
+  defaultMeetingProvider?: 'ZOOM' | 'GOOGLE_MEET' | 'CUSTOM' | null;
+  defaultMeetingUrl?: string | null;
   pointsBalance: number;
   totalSessionsTaught: number;
   totalSessionsLearned: number;
@@ -51,6 +54,8 @@ export interface PublicUser {
   timezone: string;
   isVerified: boolean;
   isDiscoverable: boolean;
+  defaultMeetingProvider?: 'ZOOM' | 'GOOGLE_MEET' | 'CUSTOM' | null;
+  defaultMeetingUrl?: string | null;
   pointsBalance: number;
   totalSessionsTaught: number;
   totalSessionsLearned: number;
@@ -203,4 +208,3 @@ export interface MatchScore {
 export interface AdPreference {
   adEmailOptOut: boolean;
 }
-

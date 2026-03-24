@@ -4,6 +4,7 @@ import type { CreateSessionInput, UpdateSessionInput, RateSessionInput, ApplyToS
 import { POINTS } from '@1hrlearning/shared';
 import { notificationService } from './notification.service';
 import { pointsService } from './points.service';
+import { emailService } from './email.service';
 
 export class SessionsService {
   async createSession(teacherId: string, input: CreateSessionInput) {
@@ -17,6 +18,11 @@ export class SessionsService {
       where: { userId: teacherId, skillId: input.skillId, isTeaching: true },
     });
     if (!teacherHasSkill) throw new AppError('Teacher does not teach this skill', 400);
+
+    const resolvedMeetingUrl = input.meetingUrl ?? teacher.defaultMeetingUrl;
+    if (!resolvedMeetingUrl) {
+      throw new AppError('Configure a default meeting link in Settings or provide a meeting URL to create a session', 400);
+    }
 
     // If a specific learner is provided (private session)
     if (input.learnerId) {
@@ -39,8 +45,13 @@ export class SessionsService {
           notes: input.notes ?? null,
           sessionType: input.sessionType ?? 'TEACHING',
           isPublic: false,
+          meetingUrl: resolvedMeetingUrl,
         },
-        include: { skill: true, teacher: { select: { id: true, displayName: true } }, learner: { select: { id: true, displayName: true } } },
+        include: {
+          skill: true,
+          teacher: { select: { id: true, displayName: true } },
+          learner: { select: { id: true, displayName: true, email: true } },
+        },
       });
 
       await notificationService.create(input.learnerId, {
@@ -66,12 +77,41 @@ export class SessionsService {
         notes: input.notes ?? null,
         sessionType: input.sessionType ?? 'TEACHING',
         isPublic: true,
+        meetingUrl: resolvedMeetingUrl,
         applicationDeadline: input.applicationDeadline ? new Date(input.applicationDeadline) : null,
         maxLearners: input.maxLearners ?? 1,
         status: 'PENDING',
       },
       include: { skill: true, teacher: { select: { id: true, displayName: true } } },
     });
+
+    const interestedLearners = await prisma.user.findMany({
+      where: {
+        id: { not: teacherId },
+        isActive: true,
+        isDiscoverable: true,
+        adEmailOptOut: false,
+        skills: {
+          some: {
+            skillId: input.skillId,
+            isLearning: true,
+          },
+        },
+      },
+      select: { id: true },
+      take: 200,
+    });
+
+    await Promise.all(
+      interestedLearners.map((learner) =>
+        notificationService.create(learner.id, {
+          type: 'SESSION_SKILL_MATCH',
+          title: 'New Matching Teaching Session',
+          message: `${teacher.displayName} created a ${skill.name} session matching your learning interests`,
+          data: { sessionId: session.id, skillId: input.skillId },
+        }),
+      ),
+    );
 
     return session;
   }
@@ -177,7 +217,14 @@ export class SessionsService {
     teacherId: string,
     input: UpdateSessionApplicationInput,
   ) {
-    const session = await prisma.session.findUnique({ where: { id: sessionId }, include: { skill: true } });
+    const session = await prisma.session.findUnique({
+      where: { id: sessionId },
+      include: {
+        skill: true,
+        teacher: { select: { displayName: true, email: true } },
+        learner: { select: { displayName: true, email: true } },
+      },
+    });
     if (!session) throw new AppError('Session not found', 404);
     if (session.teacherId !== teacherId) throw new AppError('Access denied', 403);
 
@@ -211,6 +258,15 @@ export class SessionsService {
         message: `${teacher?.displayName} accepted your application for the ${session.skill.name} session`,
         data: { sessionId, applicationId },
       });
+
+      if (session.learner?.email) {
+        await emailService.sendSessionConfirmation(session.learner.email, {
+          partnerName: session.teacher.displayName,
+          skillName: session.skill.name,
+          scheduledAt: session.scheduledAt,
+          meetingUrl: session.meetingUrl ?? undefined,
+        });
+      }
     } else {
       await notificationService.create(application.applicantId, {
         type: 'SESSION_APPLICATION_REJECTED',

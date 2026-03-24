@@ -50,6 +50,8 @@ export const updateProfileSchema = z.object({
   timezone: z.string().optional(),
   isDiscoverable: z.boolean().optional(),
   adEmailOptOut: z.boolean().optional(),
+  defaultMeetingProvider: z.enum(['ZOOM', 'GOOGLE_MEET', 'CUSTOM']).nullable().optional(),
+  defaultMeetingUrl: z.string().url().nullable().optional(),
 });
 
 // ─── Skills ──────────────────────────────────────────────────────────────────
@@ -102,6 +104,7 @@ export const createSessionSchema = z.object({
   isPublic: z.boolean().default(false),
   applicationDeadline: z.string().datetime().nullable().optional(),
   maxLearners: z.number().int().min(1).max(10).default(1),
+  meetingUrl: z.string().url().nullable().optional(),
 });
 
 export const updateSessionSchema = z.object({
