@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import type { Request, Response } from 'express';
 import authRoutes from './auth.routes';
 import usersRoutes from './users.routes';
 import skillsRoutes from './skills.routes';
@@ -16,6 +17,10 @@ router.use('/sessions', sessionsRoutes);
 router.use('/connections', connectionsRoutes);
 router.use('/notifications', notificationsRoutes);
 router.use('/points', pointsRoutes);
+
+router.get('/csrf-token', (req: Request, res: Response) => {
+  res.json({ csrfToken: req.csrfToken() });
+});
 
 router.get('/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });

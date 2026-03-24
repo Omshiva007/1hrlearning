@@ -6,6 +6,7 @@ import cors from 'cors';
 import compression from 'compression';
 import cookieParser from 'cookie-parser';
 import morgan from 'morgan';
+import csrfProtection from './middleware/csrf';
 import * as Sentry from '@sentry/node';
 import { config } from './config';
 import { logger } from './utils/logger';
@@ -41,12 +42,13 @@ app.use(
     origin: config.cors.origins,
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'csrf-token'],
   }),
 );
 
 app.use(compression());
 app.use(cookieParser());
+app.use(csrfProtection);
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
