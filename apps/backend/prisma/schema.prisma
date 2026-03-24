@@ -13,6 +13,12 @@ enum UserRole {
   MODERATOR
 }
 
+enum MeetingProvider {
+  ZOOM
+  GOOGLE_MEET
+  CUSTOM
+}
+
 enum SkillLevel {
   BEGINNER
   INTERMEDIATE
@@ -60,6 +66,7 @@ enum NotificationType {
   SESSION_APPLIED
   SESSION_APPLICATION_ACCEPTED
   SESSION_APPLICATION_REJECTED
+  SESSION_SKILL_MATCH
   SYSTEM
 }
 
@@ -90,6 +97,8 @@ model User {
   ratingCount         Int       @default(0)
   isDiscoverable      Boolean   @default(true)
   adEmailOptOut       Boolean   @default(false)
+  defaultMeetingProvider MeetingProvider @default(ZOOM)
+  defaultMeetingUrl   String?
   lastActiveAt        DateTime?
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt

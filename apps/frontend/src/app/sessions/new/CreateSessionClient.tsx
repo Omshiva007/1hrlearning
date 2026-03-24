@@ -26,6 +26,7 @@ export function CreateSessionClient({ token }: CreateSessionClientProps) {
     applicationDeadline: '',
     maxLearners: 1,
     learnerId: '',
+    meetingUrl: '',
   });
 
   const skillsQuery = useQuery({
@@ -43,6 +44,7 @@ export function CreateSessionClient({ token }: CreateSessionClientProps) {
         sessionType: form.sessionType,
         isPublic: form.isPublic,
         maxLearners: form.maxLearners,
+        meetingUrl: form.meetingUrl || defaultMeetingUrl || null,
       };
       if (form.applicationDeadline) {
         body.applicationDeadline = new Date(form.applicationDeadline).toISOString();
@@ -190,6 +192,21 @@ export function CreateSessionClient({ token }: CreateSessionClientProps) {
 
           {/* Notes */}
           <div>
+            <label className="block text-sm font-medium mb-1.5">Meeting Link *</label>
+            <Input
+              type="url"
+              required
+              placeholder="https://zoom.us/j/... or https://meet.google.com/..."
+              value={form.meetingUrl || defaultMeetingUrl}
+              onChange={(e) => setForm((f) => ({ ...f, meetingUrl: e.target.value }))}
+            />
+            {!defaultMeetingUrl && (
+              <p className="text-xs text-amber-700 mt-1">Tip: Set a default meeting link in Settings to avoid entering this every time.</p>
+            )}
+          </div>
+
+          {/* Notes */}
+          <div>
             <label className="block text-sm font-medium mb-1.5">Notes / Description (optional)</label>
             <textarea
               value={form.notes}
@@ -214,3 +231,9 @@ export function CreateSessionClient({ token }: CreateSessionClientProps) {
     </Card>
   );
 }
+  const profileQuery = useQuery({
+    queryKey: ['my-profile-session-create'],
+    queryFn: () => api.get<{ defaultMeetingUrl?: string | null }>('/auth/me', token),
+  });
+
+  const defaultMeetingUrl = profileQuery.data?.defaultMeetingUrl ?? '';
