@@ -15,6 +15,7 @@ import { connectRedis, disconnectRedis } from './utils/redis';
 import { globalRateLimit } from './middleware/rateLimit';
 import { notFoundHandler, errorHandler } from './middleware/errorHandler';
 import apiRoutes from './routes';
+import authRoutes from './routes/auth.routes';
 import { createSocketServer } from './socket';
 
 if (config.sentry.dsn) {
@@ -48,7 +49,6 @@ app.use(
 
 app.use(compression());
 app.use(cookieParser());
-app.use(csrfProtection);
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
@@ -64,7 +64,11 @@ if (config.isDev) {
 
 app.use(globalRateLimit);
 
-app.use('/api/v1', apiRoutes);
+// Auth routes are public - no CSRF protection required
+app.use('/api/v1/auth', authRoutes);
+
+// All other API routes require CSRF protection
+app.use('/api/v1', csrfProtection, apiRoutes);
 
 app.get('/', (_req, res) => {
   res.json({
