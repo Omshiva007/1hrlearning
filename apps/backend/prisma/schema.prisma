@@ -97,7 +97,7 @@ model User {
   ratingCount         Int       @default(0)
   isDiscoverable      Boolean   @default(true)
   adEmailOptOut       Boolean   @default(false)
-  defaultMeetingProvider MeetingProvider @default(ZOOM)
+  defaultMeetingProvider MeetingProvider?
   defaultMeetingUrl   String?
   lastActiveAt        DateTime?
   createdAt           DateTime  @default(now())

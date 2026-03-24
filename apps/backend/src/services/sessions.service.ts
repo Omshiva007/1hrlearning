@@ -47,7 +47,11 @@ export class SessionsService {
           isPublic: false,
           meetingUrl: resolvedMeetingUrl,
         },
-        include: { skill: true, teacher: { select: { id: true, displayName: true } }, learner: { select: { id: true, displayName: true } } },
+        include: {
+          skill: true,
+          teacher: { select: { id: true, displayName: true } },
+          learner: { select: { id: true, displayName: true, email: true } },
+        },
       });
 
       await notificationService.create(input.learnerId, {
@@ -95,6 +99,7 @@ export class SessionsService {
         },
       },
       select: { id: true },
+      take: 200,
     });
 
     await Promise.all(
@@ -256,7 +261,7 @@ export class SessionsService {
 
       if (session.learner?.email) {
         await emailService.sendSessionConfirmation(session.learner.email, {
-          partnerName: teacher?.displayName ?? session.teacher.displayName,
+          partnerName: session.teacher.displayName,
           skillName: session.skill.name,
           scheduledAt: session.scheduledAt,
           meetingUrl: session.meetingUrl ?? undefined,

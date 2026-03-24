@@ -34,8 +34,8 @@ export interface User {
   isActive: boolean;
   isDiscoverable: boolean;
   adEmailOptOut: boolean;
-  defaultMeetingProvider: 'ZOOM' | 'GOOGLE_MEET' | 'CUSTOM';
-  defaultMeetingUrl: string | null;
+  defaultMeetingProvider?: 'ZOOM' | 'GOOGLE_MEET' | 'CUSTOM' | null;
+  defaultMeetingUrl?: string | null;
   pointsBalance: number;
   totalSessionsTaught: number;
   totalSessionsLearned: number;
@@ -54,8 +54,8 @@ export interface PublicUser {
   timezone: string;
   isVerified: boolean;
   isDiscoverable: boolean;
-  defaultMeetingProvider: 'ZOOM' | 'GOOGLE_MEET' | 'CUSTOM';
-  defaultMeetingUrl: string | null;
+  defaultMeetingProvider?: 'ZOOM' | 'GOOGLE_MEET' | 'CUSTOM' | null;
+  defaultMeetingUrl?: string | null;
   pointsBalance: number;
   totalSessionsTaught: number;
   totalSessionsLearned: number;

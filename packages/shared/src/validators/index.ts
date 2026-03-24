@@ -50,7 +50,7 @@ export const updateProfileSchema = z.object({
   timezone: z.string().optional(),
   isDiscoverable: z.boolean().optional(),
   adEmailOptOut: z.boolean().optional(),
-  defaultMeetingProvider: z.enum(['ZOOM', 'GOOGLE_MEET', 'CUSTOM']).optional(),
+  defaultMeetingProvider: z.enum(['ZOOM', 'GOOGLE_MEET', 'CUSTOM']).nullable().optional(),
   defaultMeetingUrl: z.string().url().nullable().optional(),
 });
 

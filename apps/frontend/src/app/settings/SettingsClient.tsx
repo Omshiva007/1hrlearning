@@ -13,7 +13,7 @@ interface SettingsClientProps {
 interface ProfileSettings {
   isDiscoverable: boolean;
   adEmailOptOut: boolean;
-  defaultMeetingProvider?: 'ZOOM' | 'GOOGLE_MEET' | 'CUSTOM';
+  defaultMeetingProvider?: 'ZOOM' | 'GOOGLE_MEET' | 'CUSTOM' | null;
   defaultMeetingUrl?: string | null;
 }
 
@@ -44,14 +44,14 @@ export function SettingsClient({ token }: SettingsClientProps) {
 
   const [saved, setSaved] = useState('');
   const [meetingProvider, setMeetingProvider] = useState<'ZOOM' | 'GOOGLE_MEET' | 'CUSTOM'>('ZOOM');
-  const [meetingUrl, setMeetingUrl] = useState('');
+  const [meetingUrl, setMeetingUrl] = useState<string | null>(null);
   const profileData = profileQuery.data as ProfileSettings | undefined;
 
   useEffect(() => {
     if (!profileData) return;
     setMeetingProvider(profileData.defaultMeetingProvider ?? 'ZOOM');
-    setMeetingUrl(profileData.defaultMeetingUrl ?? '');
-  }, [profileData?.defaultMeetingProvider, profileData?.defaultMeetingUrl]);
+    setMeetingUrl(profileData.defaultMeetingUrl ?? null);
+  }, [profileData]);
 
   const handleDiscoverable = async (value: boolean) => {
     await updateProfileMutation.mutateAsync({ isDiscoverable: value });
@@ -68,7 +68,7 @@ export function SettingsClient({ token }: SettingsClientProps) {
   const handleMeetingSave = async () => {
     await updateProfileMutation.mutateAsync({
       defaultMeetingProvider: meetingProvider,
-      defaultMeetingUrl: meetingUrl || null,
+      defaultMeetingUrl: meetingUrl,
     });
     setSaved('meeting');
     setTimeout(() => setSaved(''), 2000);
@@ -99,8 +99,8 @@ export function SettingsClient({ token }: SettingsClientProps) {
           <input
             type="url"
             placeholder="https://..."
-            value={meetingUrl}
-            onChange={(e) => setMeetingUrl(e.target.value)}
+            value={meetingUrl ?? ''}
+            onChange={(e) => setMeetingUrl(e.target.value || null)}
             className="w-full border rounded-md px-3 py-2 text-sm"
           />
           <Button onClick={() => void handleMeetingSave()} disabled={updateProfileMutation.isPending || profileQuery.isLoading}>

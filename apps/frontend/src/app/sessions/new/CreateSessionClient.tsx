@@ -26,13 +26,20 @@ export function CreateSessionClient({ token }: CreateSessionClientProps) {
     applicationDeadline: '',
     maxLearners: 1,
     learnerId: '',
-    meetingUrl: '',
+    meetingUrl: undefined as string | undefined,
   });
 
   const skillsQuery = useQuery({
     queryKey: ['skills-list'],
     queryFn: () => fetchPaginated<Skill>('/skills', { limit: 100 }),
   });
+
+  const profileQuery = useQuery({
+    queryKey: ['my-profile-session-create'],
+    queryFn: () => api.get<{ defaultMeetingUrl?: string | null }>('/auth/me', token),
+  });
+
+  const defaultMeetingUrl = profileQuery.data?.defaultMeetingUrl ?? '';
 
   const createMutation = useMutation({
     mutationFn: () => {
@@ -44,7 +51,7 @@ export function CreateSessionClient({ token }: CreateSessionClientProps) {
         sessionType: form.sessionType,
         isPublic: form.isPublic,
         maxLearners: form.maxLearners,
-        meetingUrl: form.meetingUrl || defaultMeetingUrl || null,
+        meetingUrl: form.meetingUrl ?? defaultMeetingUrl ?? null,
       };
       if (form.applicationDeadline) {
         body.applicationDeadline = new Date(form.applicationDeadline).toISOString();
@@ -197,8 +204,8 @@ export function CreateSessionClient({ token }: CreateSessionClientProps) {
               type="url"
               required
               placeholder="https://zoom.us/j/... or https://meet.google.com/..."
-              value={form.meetingUrl || defaultMeetingUrl}
-              onChange={(e) => setForm((f) => ({ ...f, meetingUrl: e.target.value }))}
+              value={form.meetingUrl ?? defaultMeetingUrl}
+              onChange={(e) => setForm((f) => ({ ...f, meetingUrl: e.target.value || undefined }))}
             />
             {!defaultMeetingUrl && (
               <p className="text-xs text-amber-700 mt-1">Tip: Set a default meeting link in Settings to avoid entering this every time.</p>
@@ -231,9 +238,3 @@ export function CreateSessionClient({ token }: CreateSessionClientProps) {
     </Card>
   );
 }
-  const profileQuery = useQuery({
-    queryKey: ['my-profile-session-create'],
-    queryFn: () => api.get<{ defaultMeetingUrl?: string | null }>('/auth/me', token),
-  });
-
-  const defaultMeetingUrl = profileQuery.data?.defaultMeetingUrl ?? '';
