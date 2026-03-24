@@ -1,9 +1,9 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { api } from '@/lib/api';
-import { useAuth } from './useAuth';
+import { apiClient } from '@/lib/api-client';
+import { useAuthContext } from '@/lib/auth';
 import type { Skill, PaginatedResponse } from '@1hrlearning/shared';
 
-interface AdminStats {
+export interface AdminStats {
   stats: {
     totalUsers: number;
     totalSkills: number;
@@ -28,7 +28,7 @@ interface AdminStats {
   }[];
 }
 
-interface AdminUser {
+export interface AdminUser {
   id: string;
   email: string;
   username: string;
@@ -43,12 +43,10 @@ interface AdminUser {
   _count: { skills: number };
 }
 
-interface AdminCategory {
+export interface AdminCategory {
   name: string;
   skillCount: number;
 }
-
-export type { AdminCategory };
 
 interface CreateSkillInput {
   name: string;
@@ -58,14 +56,15 @@ interface CreateSkillInput {
   isApproved?: boolean;
 }
 
-interface UpdateSkillInput extends Partial<CreateSkillInput> {}
+type UpdateSkillInput = Partial<CreateSkillInput>;
 
 export function useAdminDashboard() {
-  const { accessToken } = useAuth();
+  const { token } = useAuthContext();
   return useQuery({
     queryKey: ['admin', 'dashboard'],
-    queryFn: () => api.get<AdminStats>('/admin/dashboard', accessToken ?? undefined),
+    queryFn: () => apiClient.get<AdminStats>('/admin/dashboard', token ?? undefined),
     staleTime: 60 * 1000,
+    enabled: !!token,
   });
 }
 
@@ -75,7 +74,7 @@ export function useAdminSkills(params?: {
   page?: number;
   limit?: number;
 }) {
-  const { accessToken } = useAuth();
+  const { token } = useAuthContext();
   return useQuery({
     queryKey: ['admin', 'skills', params],
     queryFn: () => {
@@ -85,60 +84,62 @@ export function useAdminSkills(params?: {
       if (params?.page) searchParams.set('page', String(params.page));
       if (params?.limit) searchParams.set('limit', String(params.limit));
       const qs = searchParams.toString();
-      return api.get<PaginatedResponse<Skill>>(`/admin/skills${qs ? `?${qs}` : ''}`, accessToken ?? undefined);
+      return apiClient.get<PaginatedResponse<Skill>>(
+        `/admin/skills${qs ? `?${qs}` : ''}`,
+        token ?? undefined,
+      );
     },
     staleTime: 30 * 1000,
+    enabled: !!token,
   });
 }
 
 export function useAdminCreateSkill() {
   const queryClient = useQueryClient();
-  const { accessToken } = useAuth();
+  const { token } = useAuthContext();
   return useMutation({
     mutationFn: (input: CreateSkillInput) =>
-      api.post<Skill>('/admin/skills', input, accessToken ?? undefined),
+      apiClient.post<Skill>('/admin/skills', input, token ?? undefined),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['admin', 'skills'] });
       void queryClient.invalidateQueries({ queryKey: ['admin', 'dashboard'] });
-      void queryClient.invalidateQueries({ queryKey: ['skills'] });
     },
   });
 }
 
 export function useAdminUpdateSkill() {
   const queryClient = useQueryClient();
-  const { accessToken } = useAuth();
+  const { token } = useAuthContext();
   return useMutation({
     mutationFn: ({ id, input }: { id: string; input: UpdateSkillInput }) =>
-      api.put<Skill>(`/admin/skills/${id}`, input, accessToken ?? undefined),
+      apiClient.put<Skill>(`/admin/skills/${id}`, input, token ?? undefined),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['admin', 'skills'] });
       void queryClient.invalidateQueries({ queryKey: ['admin', 'dashboard'] });
-      void queryClient.invalidateQueries({ queryKey: ['skills'] });
     },
   });
 }
 
 export function useAdminDeleteSkill() {
   const queryClient = useQueryClient();
-  const { accessToken } = useAuth();
+  const { token } = useAuthContext();
   return useMutation({
     mutationFn: (id: string) =>
-      api.delete(`/admin/skills/${id}`, accessToken ?? undefined),
+      apiClient.delete(`/admin/skills/${id}`, token ?? undefined),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['admin', 'skills'] });
       void queryClient.invalidateQueries({ queryKey: ['admin', 'dashboard'] });
-      void queryClient.invalidateQueries({ queryKey: ['skills'] });
     },
   });
 }
 
 export function useAdminCategories() {
-  const { accessToken } = useAuth();
+  const { token } = useAuthContext();
   return useQuery({
     queryKey: ['admin', 'categories'],
-    queryFn: () => api.get<AdminCategory[]>('/admin/categories', accessToken ?? undefined),
+    queryFn: () => apiClient.get<AdminCategory[]>('/admin/categories', token ?? undefined),
     staleTime: 60 * 1000,
+    enabled: !!token,
   });
 }
 
@@ -148,7 +149,7 @@ export function useAdminUsers(params?: {
   page?: number;
   limit?: number;
 }) {
-  const { accessToken } = useAuth();
+  const { token } = useAuthContext();
   return useQuery({
     queryKey: ['admin', 'users', params],
     queryFn: () => {
@@ -158,18 +159,22 @@ export function useAdminUsers(params?: {
       if (params?.page) searchParams.set('page', String(params.page));
       if (params?.limit) searchParams.set('limit', String(params.limit));
       const qs = searchParams.toString();
-      return api.get<{ data: AdminUser[]; pagination: PaginatedResponse<AdminUser>['pagination'] }>(`/admin/users${qs ? `?${qs}` : ''}`, accessToken ?? undefined);
+      return apiClient.get<{
+        data: AdminUser[];
+        pagination: PaginatedResponse<AdminUser>['pagination'];
+      }>(`/admin/users${qs ? `?${qs}` : ''}`, token ?? undefined);
     },
     staleTime: 30 * 1000,
+    enabled: !!token,
   });
 }
 
 export function useAdminUpdateUserRole() {
   const queryClient = useQueryClient();
-  const { accessToken } = useAuth();
+  const { token } = useAuthContext();
   return useMutation({
     mutationFn: ({ id, role }: { id: string; role: string }) =>
-      api.patch(`/admin/users/${id}/role`, { role }, accessToken ?? undefined),
+      apiClient.patch(`/admin/users/${id}/role`, { role }, token ?? undefined),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['admin', 'users'] });
       void queryClient.invalidateQueries({ queryKey: ['admin', 'dashboard'] });
@@ -179,10 +184,10 @@ export function useAdminUpdateUserRole() {
 
 export function useAdminUpdateUserStatus() {
   const queryClient = useQueryClient();
-  const { accessToken } = useAuth();
+  const { token } = useAuthContext();
   return useMutation({
     mutationFn: ({ id, isActive }: { id: string; isActive: boolean }) =>
-      api.patch(`/admin/users/${id}/status`, { isActive }, accessToken ?? undefined),
+      apiClient.patch(`/admin/users/${id}/status`, { isActive }, token ?? undefined),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['admin', 'users'] });
       void queryClient.invalidateQueries({ queryKey: ['admin', 'dashboard'] });
