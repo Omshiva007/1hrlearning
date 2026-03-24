@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import { auth } from '@/lib/auth';
 import type { Metadata } from 'next';
+import Link from 'next/link';
 
 export const metadata: Metadata = {
   title: 'Dashboard | 1hrLearning',
@@ -40,15 +41,15 @@ export default async function DashboardPage() {
         <div className="rounded-lg border bg-card p-6">
           <h2 className="font-semibold mb-4">Quick Actions</h2>
           <div className="space-y-2">
-            <a href="/skills" className="flex items-center gap-3 p-3 rounded-md hover:bg-muted transition-colors text-sm">
+            <Link href="/skills" className="flex items-center gap-3 p-3 rounded-md hover:bg-muted transition-colors text-sm">
               <span>🔍</span> Browse Skills to Learn
-            </a>
-            <a href="/profile" className="flex items-center gap-3 p-3 rounded-md hover:bg-muted transition-colors text-sm">
+            </Link>
+            <Link href="/profile" className="flex items-center gap-3 p-3 rounded-md hover:bg-muted transition-colors text-sm">
               <span>✏️</span> Update Your Profile & Skills
-            </a>
-            <a href="/sessions" className="flex items-center gap-3 p-3 rounded-md hover:bg-muted transition-colors text-sm">
+            </Link>
+            <Link href="/sessions" className="flex items-center gap-3 p-3 rounded-md hover:bg-muted transition-colors text-sm">
               <span>📅</span> View Upcoming Sessions
-            </a>
+            </Link>
           </div>
         </div>
 
