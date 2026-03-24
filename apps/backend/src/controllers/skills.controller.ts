@@ -1,7 +1,8 @@
 import type { Request, Response, NextFunction } from 'express';
 import type { AuthenticatedRequest } from '../types';
 import { skillsService } from '../services/skills.service';
-import type { SkillQueryInput } from '@1hrlearning/shared';
+import type { SkillQueryInput, UpdateUserSkillInput } from '@1hrlearning/shared';
+import { AppError } from '../types';
 
 export const skillsController = {
   async list(req: Request, res: Response, next: NextFunction): Promise<void> {
@@ -40,8 +41,20 @@ export const skillsController = {
     }
   },
 
+  async listUserSkills(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const skills = await skillsService.listUserSkills(req.params.userId);
+      res.json({ success: true, data: skills });
+    } catch (error) {
+      next(error);
+    }
+  },
+
   async addUserSkill(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
     try {
+      if (req.params.userId && req.params.userId !== req.user.id) {
+        throw new AppError('Forbidden', 403);
+      }
       const userSkill = await skillsService.addUserSkill(req.user.id, req.body);
       res.status(201).json({ success: true, data: userSkill });
     } catch (error) {
@@ -49,8 +62,27 @@ export const skillsController = {
     }
   },
 
+  async updateUserSkill(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+    try {
+      if (req.params.userId !== req.user.id) {
+        throw new AppError('Forbidden', 403);
+      }
+      const userSkill = await skillsService.updateUserSkill(
+        req.user.id,
+        req.params.skillId,
+        req.body as UpdateUserSkillInput,
+      );
+      res.json({ success: true, data: userSkill });
+    } catch (error) {
+      next(error);
+    }
+  },
+
   async removeUserSkill(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
     try {
+      if (req.params.userId && req.params.userId !== req.user.id) {
+        throw new AppError('Forbidden', 403);
+      }
       await skillsService.removeUserSkill(req.user.id, req.params.skillId);
       res.json({ success: true, message: 'Skill removed' });
     } catch (error) {

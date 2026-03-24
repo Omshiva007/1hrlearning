@@ -68,6 +68,14 @@ export const addUserSkillSchema = z.object({
   yearsOfExperience: z.number().int().min(0).max(50).nullable().optional(),
 });
 
+export const updateUserSkillSchema = z.object({
+  level: z.enum(['BEGINNER', 'INTERMEDIATE', 'ADVANCED', 'EXPERT']).optional(),
+  isTeaching: z.boolean().optional(),
+  isLearning: z.boolean().optional(),
+  description: z.string().max(300).nullable().optional(),
+  yearsOfExperience: z.number().int().min(0).max(50).nullable().optional(),
+});
+
 export const skillQuerySchema = z.object({
   q: z.string().optional(),
   category: z.enum([...SKILL_CATEGORIES] as [string, ...string[]]).optional(),
@@ -129,6 +137,7 @@ export type ChangePasswordInput = z.infer<typeof changePasswordSchema>;
 export type UpdateProfileInput = z.infer<typeof updateProfileSchema>;
 export type CreateSkillInput = z.infer<typeof createSkillSchema>;
 export type AddUserSkillInput = z.infer<typeof addUserSkillSchema>;
+export type UpdateUserSkillInput = z.infer<typeof updateUserSkillSchema>;
 export type SkillQueryInput = z.infer<typeof skillQuerySchema>;
 export type CreateSessionInput = z.infer<typeof createSessionSchema>;
 export type UpdateSessionInput = z.infer<typeof updateSessionSchema>;

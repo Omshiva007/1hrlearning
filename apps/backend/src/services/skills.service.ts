@@ -1,7 +1,7 @@
 import { prisma } from '../utils/prisma';
 import { AppError } from '../types';
 import { redis, cacheGet, cacheSet, cacheDel } from '../utils/redis';
-import type { CreateSkillInput, AddUserSkillInput, SkillQueryInput } from '@1hrlearning/shared';
+import type { CreateSkillInput, AddUserSkillInput, UpdateUserSkillInput, SkillQueryInput } from '@1hrlearning/shared';
 import { CACHE_TTL } from '@1hrlearning/shared';
 
 function slugify(text: string): string {
@@ -88,6 +88,39 @@ export class SkillsService {
     } while (cursor !== '0');
     if (keys.length > 0) await cacheDel(...keys);
     return skill;
+  }
+
+  async listUserSkills(userId: string) {
+    const userExists = await prisma.user.findUnique({ where: { id: userId, isActive: true }, select: { id: true } });
+    if (!userExists) throw new AppError('User not found', 404);
+
+    return prisma.userSkill.findMany({
+      where: { userId },
+      include: { skill: true },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  async updateUserSkill(userId: string, skillId: string, input: UpdateUserSkillInput) {
+    const userSkill = await prisma.userSkill.findUnique({
+      where: { userId_skillId: { userId, skillId } },
+    });
+    if (!userSkill) throw new AppError('Skill not found in your profile', 404);
+
+    const updated = await prisma.userSkill.update({
+      where: { userId_skillId: { userId, skillId } },
+      data: {
+        ...(input.level !== undefined ? { level: input.level } : {}),
+        ...(input.isTeaching !== undefined ? { isTeaching: input.isTeaching } : {}),
+        ...(input.isLearning !== undefined ? { isLearning: input.isLearning } : {}),
+        ...(input.description !== undefined ? { description: input.description } : {}),
+        ...(input.yearsOfExperience !== undefined ? { yearsOfExperience: input.yearsOfExperience } : {}),
+      },
+      include: { skill: true },
+    });
+
+    await cacheDel(`user:${userId}:profile`);
+    return updated;
   }
 
   async addUserSkill(userId: string, input: AddUserSkillInput) {
