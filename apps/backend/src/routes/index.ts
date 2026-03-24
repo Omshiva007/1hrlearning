@@ -7,6 +7,7 @@ import sessionsRoutes from './sessions.routes';
 import connectionsRoutes from './connections.routes';
 import notificationsRoutes from './notifications.routes';
 import pointsRoutes from './points.routes';
+import adminRoutes from './admin.routes';
 
 const router = Router();
 
@@ -17,6 +18,7 @@ router.use('/sessions', sessionsRoutes);
 router.use('/connections', connectionsRoutes);
 router.use('/notifications', notificationsRoutes);
 router.use('/points', pointsRoutes);
+router.use('/admin', adminRoutes);
 
 router.get('/csrf-token', (req: Request, res: Response) => {
   res.json({ csrfToken: req.csrfToken() });

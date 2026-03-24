@@ -12,6 +12,7 @@
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:studio": "prisma studio",
+    "db:seed": "ts-node --transpile-only src/db/seed.ts",
     "clean": "rm -rf dist"
   },
   "dependencies": {

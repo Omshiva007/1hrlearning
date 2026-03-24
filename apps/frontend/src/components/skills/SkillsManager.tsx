@@ -161,10 +161,10 @@ export function SkillsManager({ userId }: SkillsManagerProps) {
                 />
                 {skillSearch && !form.skillId && (
                   <div className="border rounded-md bg-background shadow-sm max-h-40 overflow-y-auto">
-                    {availableSkills?.data.length === 0 && (
+                    {availableSkills?.data?.length === 0 && (
                       <p className="text-xs text-muted-foreground p-3">No skills found</p>
                     )}
-                    {availableSkills?.data.map((skill: Skill) => (
+                    {availableSkills?.data?.map((skill: Skill) => (
                       <button
                         key={skill.id}
                         type="button"
