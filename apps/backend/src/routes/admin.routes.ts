@@ -25,10 +25,10 @@ router.post('/skills', (req, res, next) =>
   adminController.createSkill(req as AuthenticatedRequest, res, next),
 );
 router.put('/skills/:id', (req, res, next) =>
-  adminController.updateSkill(req as AuthenticatedRequest, res, next),
+  adminController.updateSkill(req as unknown as AuthenticatedRequest, res, next),
 );
 router.delete('/skills/:id', (req, res, next) =>
-  adminController.deleteSkill(req as AuthenticatedRequest, res, next),
+  adminController.deleteSkill(req as unknown as AuthenticatedRequest, res, next),
 );
 
 // ── Categories ────────────────────────────────────────────────────────────────
@@ -41,13 +41,13 @@ router.get('/users', (req, res, next) =>
   adminController.listUsers(req as AuthenticatedRequest, res, next),
 );
 router.get('/users/:id', (req, res, next) =>
-  adminController.getUserById(req as AuthenticatedRequest, res, next),
+  adminController.getUserById(req as unknown as AuthenticatedRequest, res, next),
 );
 router.patch('/users/:id/role', (req, res, next) =>
-  adminController.updateUserRole(req as AuthenticatedRequest, res, next),
+  adminController.updateUserRole(req as unknown as AuthenticatedRequest, res, next),
 );
 router.patch('/users/:id/status', (req, res, next) =>
-  adminController.updateUserStatus(req as AuthenticatedRequest, res, next),
+  adminController.updateUserStatus(req as unknown as AuthenticatedRequest, res, next),
 );
 
 export default router;
