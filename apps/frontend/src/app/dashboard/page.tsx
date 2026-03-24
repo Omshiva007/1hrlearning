@@ -47,9 +47,9 @@ export default async function DashboardPage() {
             <Link href="/profile" className="flex items-center gap-3 p-3 rounded-md hover:bg-muted transition-colors text-sm">
               <span>✏️</span> Update Your Profile & Skills
             </Link>
-            <a href="/sessions" className="flex items-center gap-3 p-3 rounded-md hover:bg-muted transition-colors text-sm">
+            <Link href="/sessions" className="flex items-center gap-3 p-3 rounded-md hover:bg-muted transition-colors text-sm">
               <span>📅</span> View Upcoming Sessions
-            </a>
+            </Link>
           </div>
         </div>
 

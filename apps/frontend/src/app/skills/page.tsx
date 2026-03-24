@@ -59,7 +59,7 @@ export default async function SkillsPage({ searchParams }: PageProps) {
           All
         </Link>
         {SKILL_CATEGORIES.map((cat) => (
-          <a
+          <Link
             key={cat}
             href={`/skills?category=${encodeURIComponent(cat)}`}
             className={`px-3 py-1 rounded-full text-sm border transition-colors ${
@@ -67,7 +67,7 @@ export default async function SkillsPage({ searchParams }: PageProps) {
             }`}
           >
             {cat}
-          </a>
+          </Link>
         ))}
       </div>
 
