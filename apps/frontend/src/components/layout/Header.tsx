@@ -26,8 +26,14 @@ export function Header() {
               <Link href="/dashboard" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
                 Dashboard
               </Link>
+              <Link href="/discover" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+                Discover
+              </Link>
               <Link href="/sessions" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
                 Sessions
+              </Link>
+              <Link href="/points" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+                Points
               </Link>
               {user?.role === 'ADMIN' && (
                 <a
@@ -51,6 +57,11 @@ export function Header() {
               <Link href="/notifications">
                 <Button variant="ghost" size="icon" aria-label="Notifications">
                   🔔
+                </Button>
+              </Link>
+              <Link href="/settings">
+                <Button variant="ghost" size="icon" aria-label="Settings">
+                  ⚙️
                 </Button>
               </Link>
               <Link href={`/profile/${user.username ?? ''}`}>

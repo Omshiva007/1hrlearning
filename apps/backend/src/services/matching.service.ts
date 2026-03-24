@@ -19,6 +19,7 @@ export class MatchingService {
       where: {
         id: { not: userId },
         isActive: true,
+        isDiscoverable: true,
         skills: {
           some: {
             OR: [
@@ -42,13 +43,16 @@ export class MatchingService {
         (s) => s.isLearning && canTeach.includes(s.skillId),
       );
 
+      const skillOverlap = matchTeachesWhatILearn.length + matchLearnsWhatITeach.length;
       const mutualExchangeBonus = matchTeachesWhatILearn.length > 0 && matchLearnsWhatITeach.length > 0 ? 0.5 : 0;
       const teachScore = matchTeachesWhatILearn.length * 1.0;
       const learnScore = matchLearnsWhatITeach.length * 0.5;
       const ratingBonus = match.averageRating ? match.averageRating / 10 : 0;
       const activityBonus = Math.min(match.totalSessionsTaught / 100, 0.3);
+      const reciprocityBonus = mutualExchangeBonus;
 
       const score = teachScore + learnScore + mutualExchangeBonus + ratingBonus + activityBonus;
+
       const matchedSkills = [
         ...matchTeachesWhatILearn.map((s) => s.skill),
         ...matchLearnsWhatITeach.map((s) => s.skill),
@@ -64,6 +68,7 @@ export class MatchingService {
           avatarUrl: match.avatarUrl,
           timezone: match.timezone,
           isVerified: match.isVerified,
+          isDiscoverable: match.isDiscoverable,
           pointsBalance: match.pointsBalance,
           totalSessionsTaught: match.totalSessionsTaught,
           totalSessionsLearned: match.totalSessionsLearned,
@@ -75,6 +80,15 @@ export class MatchingService {
         },
         score,
         matchedSkills,
+        scoreFactors: {
+          skillOverlap,
+          reciprocityBonus,
+          ratingBonus,
+          activityBonus,
+          mutualExchangeBonus,
+        },
+        canTeachMe: matchTeachesWhatILearn.map((s) => s.skill),
+        iCanTeach: matchLearnsWhatITeach.map((s) => s.skill),
       };
     });
 

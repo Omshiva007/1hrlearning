@@ -36,6 +36,17 @@ enum ConnectionStatus {
   BLOCKED
 }
 
+enum SessionType {
+  TEACHING
+  QUERY_CLARIFICATION
+}
+
+enum SessionApplicationStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
 enum NotificationType {
   CONNECTION_REQUEST
   CONNECTION_ACCEPTED
@@ -46,6 +57,9 @@ enum NotificationType {
   SESSION_COMPLETED
   RATING_RECEIVED
   POINTS_EARNED
+  SESSION_APPLIED
+  SESSION_APPLICATION_ACCEPTED
+  SESSION_APPLICATION_REJECTED
   SYSTEM
 }
 
@@ -74,6 +88,8 @@ model User {
   totalSessionsLearned Int      @default(0)
   averageRating       Float?
   ratingCount         Int       @default(0)
+  isDiscoverable      Boolean   @default(true)
+  adEmailOptOut       Boolean   @default(false)
   lastActiveAt        DateTime?
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt
@@ -89,6 +105,7 @@ model User {
   ratingsReceived     Rating[]            @relation("RatedUserRatings")
   verificationTokens  VerificationToken[]
   refreshTokens       RefreshToken[]
+  sessionApplications SessionApplication[]
 
   @@index([email])
   @@index([username])
@@ -171,11 +188,15 @@ model Session {
   id                String        @id @default(cuid())
   teacherId         String
   teacher           User          @relation("TeacherSessions", fields: [teacherId], references: [id])
-  learnerId         String
-  learner           User          @relation("LearnerSessions", fields: [learnerId], references: [id])
+  learnerId         String?
+  learner           User?         @relation("LearnerSessions", fields: [learnerId], references: [id])
   skillId           String
   skill             Skill         @relation(fields: [skillId], references: [id])
   status            SessionStatus @default(PENDING)
+  sessionType       SessionType   @default(TEACHING)
+  isPublic          Boolean       @default(false)
+  applicationDeadline DateTime?
+  maxLearners       Int           @default(1)
   scheduledAt       DateTime
   durationMinutes   Int           @default(60)
   meetingUrl        String?
@@ -189,6 +210,7 @@ model Session {
 
   ratings           Rating[]
   pointTransactions PointTransaction[]
+  applications      SessionApplication[]
 
   @@index([teacherId])
   @@index([learnerId])
@@ -262,4 +284,21 @@ model PointTransaction {
   @@index([userId])
   @@index([sessionId])
   @@index([createdAt])
+}
+
+model SessionApplication {
+  id          String                   @id @default(cuid())
+  sessionId   String
+  session     Session                  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  applicantId String
+  applicant   User                     @relation(fields: [applicantId], references: [id], onDelete: Cascade)
+  status      SessionApplicationStatus @default(PENDING)
+  message     String?
+  createdAt   DateTime                 @default(now())
+  updatedAt   DateTime                 @updatedAt
+
+  @@unique([sessionId, applicantId])
+  @@index([sessionId])
+  @@index([applicantId])
+  @@index([status])
 }

@@ -73,4 +73,23 @@ export const usersController = {
       next(error);
     }
   },
+
+  async getAdPreferences(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const prefs = await usersService.getAdPreferences(req.user.id);
+      res.json({ success: true, data: prefs });
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  async updateAdPreferences(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { adEmailOptOut } = req.body;
+      const prefs = await usersService.updateAdPreferences(req.user.id, Boolean(adEmailOptOut));
+      res.json({ success: true, data: prefs });
+    } catch (error) {
+      next(error);
+    }
+  },
 };

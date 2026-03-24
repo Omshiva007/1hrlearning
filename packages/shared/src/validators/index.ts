@@ -48,6 +48,8 @@ export const updateProfileSchema = z.object({
   bio: z.string().max(500).nullable().optional(),
   avatarUrl: z.string().url().nullable().optional(),
   timezone: z.string().optional(),
+  isDiscoverable: z.boolean().optional(),
+  adEmailOptOut: z.boolean().optional(),
 });
 
 // ─── Skills ──────────────────────────────────────────────────────────────────
@@ -86,7 +88,7 @@ export const skillQuerySchema = z.object({
 // ─── Sessions ────────────────────────────────────────────────────────────────
 
 export const createSessionSchema = z.object({
-  learnerId: z.string().cuid('Invalid learner ID'),
+  learnerId: z.string().cuid('Invalid learner ID').optional(),
   skillId: z.string().cuid('Invalid skill ID'),
   scheduledAt: z.string().datetime('Invalid date format'),
   durationMinutes: z
@@ -96,6 +98,10 @@ export const createSessionSchema = z.object({
     .max(SESSION.MAX_DURATION_MINUTES)
     .default(SESSION.DEFAULT_DURATION_MINUTES),
   notes: z.string().max(1000).nullable().optional(),
+  sessionType: z.enum(['TEACHING', 'QUERY_CLARIFICATION']).default('TEACHING'),
+  isPublic: z.boolean().default(false),
+  applicationDeadline: z.string().datetime().nullable().optional(),
+  maxLearners: z.number().int().min(1).max(10).default(1),
 });
 
 export const updateSessionSchema = z.object({
@@ -128,6 +134,28 @@ export const paginationSchema = z.object({
   limit: z.coerce.number().int().positive().max(100).default(20),
 });
 
+// ─── Session Applications ─────────────────────────────────────────────────────
+
+export const applyToSessionSchema = z.object({
+  message: z.string().max(500).nullable().optional(),
+});
+
+export const updateSessionApplicationSchema = z.object({
+  status: z.enum(['ACCEPTED', 'REJECTED']),
+});
+
+export const discoverSessionsSchema = z.object({
+  skillId: z.string().cuid().optional(),
+  page: z.coerce.number().int().positive().default(1),
+  limit: z.coerce.number().int().positive().max(100).default(20),
+});
+
+// ─── Ad Preferences ───────────────────────────────────────────────────────────
+
+export const adPreferenceSchema = z.object({
+  adEmailOptOut: z.boolean(),
+});
+
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export type RegisterInput = z.infer<typeof registerSchema>;
@@ -145,3 +173,7 @@ export type RateSessionInput = z.infer<typeof rateSessionSchema>;
 export type CreateConnectionInput = z.infer<typeof createConnectionSchema>;
 export type UpdateConnectionInput = z.infer<typeof updateConnectionSchema>;
 export type PaginationInput = z.infer<typeof paginationSchema>;
+export type ApplyToSessionInput = z.infer<typeof applyToSessionSchema>;
+export type UpdateSessionApplicationInput = z.infer<typeof updateSessionApplicationSchema>;
+export type DiscoverSessionsInput = z.infer<typeof discoverSessionsSchema>;
+export type AdPreferenceInput = z.infer<typeof adPreferenceSchema>;
