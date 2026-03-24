@@ -20,10 +20,6 @@ router.use('/notifications', notificationsRoutes);
 router.use('/points', pointsRoutes);
 router.use('/admin', adminRoutes);
 
-router.get('/csrf-token', (req: Request, res: Response) => {
-  res.json({ csrfToken: req.csrfToken() });
-});
-
 router.get('/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
