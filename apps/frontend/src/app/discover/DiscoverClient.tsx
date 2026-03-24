@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import Link from 'next/link';
 import { api, fetchPaginated } from '@/lib/api';
 import type { MatchScore, Session } from '@1hrlearning/shared';
 import { Button } from '@/components/ui/button';
@@ -251,7 +252,7 @@ export function DiscoverClient({ token }: DiscoverClientProps) {
             <div className="text-center py-12 text-muted-foreground">
               <p>Failed to load matches. Make sure you have skills listed in your profile.</p>
               <Button variant="outline" className="mt-4" asChild>
-                <a href="/profile">Update Profile →</a>
+                <Link href="/profile">Update Profile →</Link>
               </Button>
             </div>
           )}
@@ -260,7 +261,7 @@ export function DiscoverClient({ token }: DiscoverClientProps) {
               <p className="text-lg mb-2">No matches yet</p>
               <p className="text-sm mb-4">Add teaching and learning skills to your profile to find matches.</p>
               <Button asChild>
-                <a href="/profile">Update Skills →</a>
+                <Link href="/profile">Update Skills →</Link>
               </Button>
             </div>
           )}

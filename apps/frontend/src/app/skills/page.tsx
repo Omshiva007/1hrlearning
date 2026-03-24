@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import { buildMetadata } from '@/lib/metadata';
 import { SkillCard } from '@/components/skills/SkillCard';
 import { fetchPaginated } from '@/lib/api';
@@ -49,14 +50,14 @@ export default async function SkillsPage({ searchParams }: PageProps) {
 
       {/* Category Filter */}
       <div className="flex flex-wrap gap-2 mb-6">
-        <a
+        <Link
           href="/skills"
           className={`px-3 py-1 rounded-full text-sm border transition-colors ${
             !searchParams.category ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'
           }`}
         >
           All
-        </a>
+        </Link>
         {SKILL_CATEGORIES.map((cat) => (
           <a
             key={cat}
