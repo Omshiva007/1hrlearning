@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
 import { useAuthContext } from '@/lib/auth';
-import type { Skill, PaginatedResponse } from '@1hrlearning/shared';
+import type { Skill, PaginatedResponse, CreateSkillInput, UpdateSkillInput } from '@1hrlearning/shared';
 
 export interface AdminStats {
   stats: {
@@ -47,16 +47,6 @@ export interface AdminCategory {
   name: string;
   skillCount: number;
 }
-
-interface CreateSkillInput {
-  name: string;
-  description?: string;
-  category: string;
-  subcategory?: string;
-  isApproved?: boolean;
-}
-
-type UpdateSkillInput = Partial<CreateSkillInput>;
 
 export function useAdminDashboard() {
   const { token } = useAuthContext();

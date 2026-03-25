@@ -61,6 +61,17 @@ export const createSkillSchema = z.object({
   description: z.string().max(500).nullable().optional(),
   category: z.enum([...SKILL_CATEGORIES] as [string, ...string[]]),
   subcategory: z.string().max(100).nullable().optional(),
+  iconUrl: z.string().url().nullable().optional(),
+  isApproved: z.boolean().optional(),
+});
+
+export const updateSkillSchema = z.object({
+  name: z.string().min(1, 'Skill name is required').max(100).optional(),
+  description: z.string().max(500).nullable().optional(),
+  category: z.enum([...SKILL_CATEGORIES] as [string, ...string[]]).optional(),
+  subcategory: z.string().max(100).nullable().optional(),
+  iconUrl: z.string().url().nullable().optional(),
+  isApproved: z.boolean().optional(),
 });
 
 export const addUserSkillSchema = z.object({
@@ -167,6 +178,7 @@ export type RefreshTokenInput = z.infer<typeof refreshTokenSchema>;
 export type ChangePasswordInput = z.infer<typeof changePasswordSchema>;
 export type UpdateProfileInput = z.infer<typeof updateProfileSchema>;
 export type CreateSkillInput = z.infer<typeof createSkillSchema>;
+export type UpdateSkillInput = z.infer<typeof updateSkillSchema>;
 export type AddUserSkillInput = z.infer<typeof addUserSkillSchema>;
 export type UpdateUserSkillInput = z.infer<typeof updateUserSkillSchema>;
 export type SkillQueryInput = z.infer<typeof skillQuerySchema>;
