@@ -2,6 +2,8 @@ import { Router } from 'express';
 import type { Request, Response, NextFunction } from 'express';
 import { requireAuth, requireRole } from '../middleware/auth';
 import { adminController } from '../controllers/admin.controller';
+import { validate } from '../middleware/validate';
+import { createSkillSchema, updateSkillSchema } from '@1hrlearning/shared';
 import type { AuthenticatedRequest } from '../types';
 
 const router = Router();
@@ -21,10 +23,10 @@ router.get('/dashboard', (req, res, next) =>
 router.get('/skills', (req, res, next) =>
   adminController.listSkills(req as AuthenticatedRequest, res, next),
 );
-router.post('/skills', (req, res, next) =>
+router.post('/skills', validate(createSkillSchema), (req, res, next) =>
   adminController.createSkill(req as AuthenticatedRequest, res, next),
 );
-router.put('/skills/:id', (req, res, next) =>
+router.put('/skills/:id', validate(updateSkillSchema), (req, res, next) =>
   adminController.updateSkill(req as unknown as AuthenticatedRequest, res, next),
 );
 router.delete('/skills/:id', (req, res, next) =>
