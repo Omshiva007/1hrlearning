@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__00d58f76-8f2a-4f47-86de-c858556fa703__search_files",
+      "mcp__00d58f76-8f2a-4f47-86de-c858556fa703__read_file_content",
+      "Bash(Get-ChildItem -Path \"E:\\\\Git\\\\1hrlearning\" -Force)",
+      "Bash(Select-Object Name, FullName)",
+      "Bash(grep -E \"\\\\.ts$\")",
+      "Bash(git checkout *)",
+      "Bash(git add *)"
+    ]
+  }
+}

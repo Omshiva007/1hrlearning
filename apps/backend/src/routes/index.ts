@@ -8,6 +8,9 @@ import connectionsRoutes from './connections.routes';
 import notificationsRoutes from './notifications.routes';
 import pointsRoutes from './points.routes';
 import adminRoutes from './admin.routes';
+import availabilityRoutes from './availability.routes';
+import testimonialsRoutes from './testimonials.routes';
+import meetingLinksRoutes from './meeting-links.routes';
 
 const router = Router();
 
@@ -19,6 +22,9 @@ router.use('/connections', connectionsRoutes);
 router.use('/notifications', notificationsRoutes);
 router.use('/points', pointsRoutes);
 router.use('/admin', adminRoutes);
+router.use('/availability', availabilityRoutes);
+router.use('/testimonials', testimonialsRoutes);
+router.use('/meeting-links', meetingLinksRoutes);
 
 router.get('/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
