@@ -13,7 +13,7 @@ export const metadata: Metadata = buildMetadata({
 });
 
 interface PageProps {
-  searchParams: { q?: string; category?: string; page?: string };
+  searchParams: Promise<{ q?: string; category?: string; page?: string }>;
 }
 
 async function getSkills(params: Record<string, string>): Promise<{
@@ -28,15 +28,16 @@ async function getSkills(params: Record<string, string>): Promise<{
 }
 
 export default async function SkillsPage({ searchParams }: PageProps) {
-  const page = Number(searchParams.page ?? 1);
-  const params = {
-    ...(searchParams.q ? { q: searchParams.q } : {}),
-    ...(searchParams.category ? { category: searchParams.category } : {}),
+  const resolvedParams = await searchParams;
+  const page = Number(resolvedParams.page ?? 1);
+  const queryParams = {
+    ...(resolvedParams.q ? { q: resolvedParams.q } : {}),
+    ...(resolvedParams.category ? { category: resolvedParams.category } : {}),
     page,
   };
 
   const { data: skills, pagination } = await getSkills(
-    Object.fromEntries(Object.entries(params).map(([k, v]) => [k, String(v)])),
+    Object.fromEntries(Object.entries(queryParams).map(([k, v]) => [k, String(v)])),
   );
 
   return (

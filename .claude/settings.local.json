@@ -7,7 +7,14 @@
       "Bash(Select-Object Name, FullName)",
       "Bash(grep -E \"\\\\.ts$\")",
       "Bash(git checkout *)",
-      "Bash(git add *)"
+      "Bash(git add *)",
+      "Bash(find E:\\\\\\\\Git\\\\\\\\1hrlearning\\\\\\\\apps\\\\\\\\frontend\\\\\\\\src -type f -name \"*.tsx\" -o -name \"*.ts\")",
+      "Bash(ls -la \"E:\\\\\\\\Git\\\\\\\\1hrlearning\\\\\\\\apps\\\\\\\\frontend\\\\\\\\src\\\\\\\\\")",
+      "Bash(Get-ChildItem -Path \"E:\\\\Git\\\\1hrlearning\" -Directory)",
+      "Bash(Select-Object Name)",
+      "Bash(ls -la \"C:\\\\\\\\Users\\\\\\\\UIPL\\\\\\\\Downloads\\\\\\\\oke-prototype\\\\\\\\oke-prototype\\\\\\\\\" 2>/dev/null | head -20)",
+      "Bash(cat \"C:\\\\\\\\Users\\\\\\\\UIPL\\\\\\\\Downloads\\\\\\\\oke-prototype\\\\\\\\oke-prototype\\\\\\\\css\\\\\\\\styles.css\")",
+      "Bash(npm run *)"
     ]
   }
 }

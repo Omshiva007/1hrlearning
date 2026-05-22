@@ -1,42 +1,122 @@
+'use client';
+
 import Link from 'next/link';
 
 export function Footer() {
   return (
-    <footer className="border-t bg-muted/50">
-      <div className="container mx-auto max-w-7xl px-4 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-          <div className="col-span-1 md:col-span-2">
-            <Link href="/" className="flex items-center gap-2 font-bold text-xl mb-3">
-              <span className="text-2xl">🎓</span>
-              <span>1hrLearning</span>
-            </Link>
-            <p className="text-sm text-muted-foreground max-w-xs">
-              A free, non-commercial platform for one-to-one knowledge exchange. Share what you know.
-              Learn something new in an hour.
+    <footer className="border-t border-border bg-text-primary text-white">
+      <div className="px-10 py-14">
+        {/* Top Section */}
+        <div className="mb-10 grid grid-cols-4 gap-8">
+          {/* Brand */}
+          <div>
+            <div className="mb-2 flex items-center gap-2">
+              <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-green text-xs font-bold text-green-light">
+                OK
+              </div>
+              <span className="text-sm font-semibold">OKE</span>
+            </div>
+            <p className="text-xs leading-relaxed text-gray-400">
+              Where everyone is both a teacher and a learner.
             </p>
           </div>
 
+          {/* Product */}
           <div>
-            <h3 className="font-semibold text-sm mb-3">Platform</h3>
-            <ul className="space-y-2 text-sm text-muted-foreground">
-              <li><Link href="/skills" className="hover:text-foreground transition-colors">Browse Skills</Link></li>
-              <li><Link href="/register" className="hover:text-foreground transition-colors">Join Free</Link></li>
-              <li><Link href="/login" className="hover:text-foreground transition-colors">Sign In</Link></li>
+            <h3 className="mb-3 text-xs font-semibold uppercase tracking-widest text-gray-400">
+              Product
+            </h3>
+            <ul className="space-y-2 text-sm text-gray-300">
+              <li>
+                <Link href="/" className="transition-colors hover:text-white">
+                  How it works
+                </Link>
+              </li>
+              <li>
+                <a href="#topics" className="transition-colors hover:text-white">
+                  Topics
+                </a>
+              </li>
+              <li>
+                <Link
+                  href="/discover"
+                  className="transition-colors hover:text-white"
+                >
+                  Public sessions
+                </Link>
+              </li>
             </ul>
           </div>
 
+          {/* Platform */}
           <div>
-            <h3 className="font-semibold text-sm mb-3">About</h3>
-            <ul className="space-y-2 text-sm text-muted-foreground">
-              <li><Link href="/about" className="hover:text-foreground transition-colors">About Us</Link></li>
-              <li><Link href="/privacy" className="hover:text-foreground transition-colors">Privacy Policy</Link></li>
-              <li><Link href="/terms" className="hover:text-foreground transition-colors">Terms of Service</Link></li>
+            <h3 className="mb-3 text-xs font-semibold uppercase tracking-widest text-gray-400">
+              Platform
+            </h3>
+            <ul className="space-y-2 text-sm text-gray-300">
+              <li>
+                <a href="#" className="transition-colors hover:text-white">
+                  About
+                </a>
+              </li>
+              <li>
+                <a href="#" className="transition-colors hover:text-white">
+                  How points work
+                </a>
+              </li>
+              <li>
+                <a href="#" className="transition-colors hover:text-white">
+                  Trust and safety
+                </a>
+              </li>
+              <li>
+                <a href="#" className="transition-colors hover:text-white">
+                  Contact
+                </a>
+              </li>
+            </ul>
+          </div>
+
+          {/* Legal */}
+          <div>
+            <h3 className="mb-3 text-xs font-semibold uppercase tracking-widest text-gray-400">
+              Legal
+            </h3>
+            <ul className="space-y-2 text-sm text-gray-300">
+              <li>
+                <a href="#" className="transition-colors hover:text-white">
+                  Privacy policy
+                </a>
+              </li>
+              <li>
+                <a href="#" className="transition-colors hover:text-white">
+                  Terms of service
+                </a>
+              </li>
+              <li>
+                <a href="#" className="transition-colors hover:text-white">
+                  Cookie policy
+                </a>
+              </li>
             </ul>
           </div>
         </div>
 
-        <div className="mt-8 pt-8 border-t text-center text-xs text-muted-foreground">
-          <p>© {new Date().getFullYear()} 1hrLearning. Open source, non-commercial.</p>
+        {/* Bottom Section */}
+        <div className="border-t border-gray-700 pt-5">
+          <div className="flex items-center justify-between">
+            <p className="text-xs text-gray-500">
+              © 2026 Open Knowledge Exchange. All rights reserved.
+            </p>
+            <div className="flex gap-4 text-xs text-gray-500">
+              <a href="#" className="transition-colors hover:text-gray-300">
+                Privacy
+              </a>
+              <a href="#" className="transition-colors hover:text-gray-300">
+                Terms
+              </a>
+            </div>
+          </div>
         </div>
       </div>
     </footer>
