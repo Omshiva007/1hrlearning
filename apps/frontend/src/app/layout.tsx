@@ -17,10 +17,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           dangerouslySetInnerHTML={{ __html: safeJsonLd(websiteSchema) }}
         />
       </head>
-      <body>
-        <Providers>
-          <div className="min-h-screen flex flex-col">{children}</div>
-        </Providers>
+      <body className="bg-background text-foreground">
+        <Providers>{children}</Providers>
       </body>
     </html>
   );

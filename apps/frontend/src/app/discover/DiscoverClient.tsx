@@ -34,7 +34,7 @@ function ScoreBar({ label, value, max = 1, color }: { label: string; value: numb
 
 function MatchCard({ match, token }: { match: MatchScore; token: string }) {
   const [expanded, setExpanded] = useState(false);
-  const maxSkillOverlap = Math.max(match.scoreFactors.skillOverlap, 1);
+  const maxAvailabilityOverlap = Math.max(match.scoreFactors.availabilityOverlap ?? 0, 1);
 
   return (
     <Card className="hover:shadow-md transition-shadow">
@@ -94,11 +94,10 @@ function MatchCard({ match, token }: { match: MatchScore; token: string }) {
 
         {expanded && (
           <div className="pt-2 space-y-2 border-t">
-            <p className="text-xs font-medium text-muted-foreground mb-2">Score factors</p>
-            <ScoreBar label="Skill overlap" value={match.scoreFactors.skillOverlap} max={Math.max(maxSkillOverlap, 4)} color="bg-green-500" />
-            <ScoreBar label="Mutual exchange bonus" value={match.scoreFactors.mutualExchangeBonus} max={0.5} color="bg-purple-500" />
-            <ScoreBar label="Rating quality" value={match.scoreFactors.ratingBonus} max={0.5} color="bg-yellow-500" />
-            <ScoreBar label="Activity level" value={match.scoreFactors.activityBonus} max={0.3} color="bg-blue-500" />
+            <p className="text-xs font-medium text-muted-foreground mb-2">Score breakdown (out of 100)</p>
+            <ScoreBar label="Topic match" value={match.scoreFactors.topicMatch ?? 0} max={50} color="bg-green-500" />
+            <ScoreBar label="Availability overlap" value={match.scoreFactors.availabilityOverlap ?? 0} max={30} color="bg-purple-500" />
+            <ScoreBar label="Reputation" value={match.scoreFactors.reputation ?? 0} max={20} color="bg-yellow-500" />
           </div>
         )}
 
