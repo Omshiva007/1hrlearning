@@ -27,6 +27,14 @@ export async function requireAuth(
       throw new AppError('User not found or inactive', 401);
     }
 
+    // Also check suspension/ban
+    const fullUser = await prisma.user.findUnique({
+      where: { id: payload.sub },
+      select: { isSuspended: true, isBanned: true },
+    });
+    if (fullUser?.isBanned) throw new AppError('Account has been banned', 403);
+    if (fullUser?.isSuspended) throw new AppError('Account is suspended', 403);
+
     req.user = { id: user.id, email: user.email, role: user.role };
     next();
   } catch (error) {
@@ -38,13 +46,23 @@ export async function requireAuth(
   }
 }
 
-export function requireRole(...roles: string[]) {
+// Role hierarchy: ADMIN > MODERATOR > SUPPORT > USER
+const ROLE_HIERARCHY: Record<string, number> = {
+  USER: 0,
+  SUPPORT: 1,
+  MODERATOR: 2,
+  ADMIN: 3,
+};
+
+export function requireRole(minimumRole: string) {
   return (req: AuthenticatedRequest, _res: Response, next: NextFunction): void => {
     if (!req.user) {
       next(new AppError('Unauthorized', 401));
       return;
     }
-    if (!roles.includes(req.user.role)) {
+    const userLevel = ROLE_HIERARCHY[req.user.role] ?? 0;
+    const requiredLevel = ROLE_HIERARCHY[minimumRole] ?? 999;
+    if (userLevel < requiredLevel) {
       next(new AppError('Insufficient permissions', 403));
       return;
     }

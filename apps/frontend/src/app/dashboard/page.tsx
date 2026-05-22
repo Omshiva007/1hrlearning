@@ -12,6 +12,25 @@ export default async function DashboardPage() {
   const session = await auth();
   if (!session) redirect('/login');
 
+  // Check if user has completed onboarding
+  try {
+    const response = await fetch('http://localhost:4000/api/v1/users/' + session.user?.id, {
+      headers: {
+        Authorization: `Bearer ${session.accessToken}`,
+      },
+    });
+
+    if (response.ok) {
+      const user = await response.json();
+      if (!user.data?.isOnboardingComplete) {
+        redirect('/onboarding');
+      }
+    }
+  } catch (error) {
+    // Continue with dashboard if we can't check onboarding status
+    console.error('Failed to check onboarding status:', error);
+  }
+
   return (
     <div className="container mx-auto max-w-6xl px-4 py-8">
       <div className="mb-8">

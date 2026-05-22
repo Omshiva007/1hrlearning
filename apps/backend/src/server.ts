@@ -16,6 +16,7 @@ import { notFoundHandler, errorHandler } from './middleware/errorHandler';
 import apiRoutes from './routes';
 import authRoutes from './routes/auth.routes';
 import { createSocketServer } from './socket';
+import { runAllBackgroundJobs } from './jobs/cron-jobs';
 
 if (config.sentry.dsn) {
   Sentry.init({
@@ -90,6 +91,17 @@ async function start(): Promise<void> {
     httpServer.listen(config.port, () => {
       logger.info(`🚀 Server running on port ${config.port} (${config.env})`);
     });
+
+    // Start background jobs
+    // Run immediately on startup
+    runAllBackgroundJobs().catch((error) => logger.error('Error running background jobs:', error));
+
+    // Then run every hour (3600000ms)
+    setInterval(() => {
+      runAllBackgroundJobs().catch((error) => logger.error('Error running background jobs:', error));
+    }, 60 * 60 * 1000);
+
+    logger.info('Background jobs scheduler initialized');
   } catch (error) {
     logger.error('Failed to start server:', error);
     process.exit(1);

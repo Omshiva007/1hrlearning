@@ -7,10 +7,13 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// ─── Enums ────────────────────────────────────────────────────────────────────
+
 enum UserRole {
   USER
   ADMIN
   MODERATOR
+  SUPPORT
 }
 
 enum MeetingProvider {
@@ -33,18 +36,7 @@ enum SessionStatus {
   COMPLETED
   CANCELLED
   NO_SHOW
-}
-
-enum ConnectionStatus {
-  PENDING
-  ACCEPTED
-  REJECTED
-  BLOCKED
-}
-
-enum SessionType {
-  TEACHING
-  QUERY_CLARIFICATION
+  RATED
 }
 
 enum SessionApplicationStatus {
@@ -53,9 +45,38 @@ enum SessionApplicationStatus {
   REJECTED
 }
 
+enum AvailabilityStatus {
+  OPEN
+  HELD
+  BOOKED
+}
+
+enum FlagTargetType {
+  PROFILE
+  TESTIMONIAL
+  SESSION
+}
+
+enum FlagStatus {
+  OPEN
+  RESOLVED
+  DISMISSED
+}
+
+enum AdStatus {
+  ACTIVE
+  PAUSED
+  ARCHIVED
+}
+
+enum AdPlacement {
+  EMAIL
+  TOPIC_PAGE
+  DASHBOARD
+  ALL
+}
+
 enum NotificationType {
-  CONNECTION_REQUEST
-  CONNECTION_ACCEPTED
   SESSION_REQUEST
   SESSION_CONFIRMED
   SESSION_CANCELLED
@@ -67,6 +88,15 @@ enum NotificationType {
   SESSION_APPLICATION_ACCEPTED
   SESSION_APPLICATION_REJECTED
   SESSION_SKILL_MATCH
+  INTEREST_RECEIVED
+  INTEREST_APPROVED
+  INTEREST_DECLINED
+  BALANCE_LOW
+  PUBLIC_SESSION_AVAILABLE
+  POINTS_EXPIRY_WARNING
+  TESTIMONIAL_RECEIVED
+  ACCOUNT_SUSPENDED
+  ACCOUNT_REINSTATED
   SYSTEM
 }
 
@@ -76,50 +106,75 @@ enum PointTransactionType {
   BONUS
   PENALTY
   REFUND
+  ADMIN_GRANT
+  ADMIN_DEDUCT
+  EXPIRY
 }
 
-model User {
-  id                  String    @id @default(cuid())
-  email               String    @unique
-  username            String    @unique
-  displayName         String
-  passwordHash        String
-  bio                 String?
-  avatarUrl           String?
-  timezone            String    @default("UTC")
-  role                UserRole  @default(USER)
-  isVerified          Boolean   @default(false)
-  isActive            Boolean   @default(true)
-  pointsBalance       Int       @default(10)
-  totalSessionsTaught Int       @default(0)
-  totalSessionsLearned Int      @default(0)
-  averageRating       Float?
-  ratingCount         Int       @default(0)
-  isDiscoverable      Boolean   @default(true)
-  adEmailOptOut       Boolean   @default(false)
-  defaultMeetingProvider MeetingProvider?
-  defaultMeetingUrl   String?
-  lastActiveAt        DateTime?
-  createdAt           DateTime  @default(now())
-  updatedAt           DateTime  @updatedAt
+// ─── Core Models ──────────────────────────────────────────────────────────────
 
-  skills              UserSkill[]
-  sessionsTeaching    Session[]           @relation("TeacherSessions")
-  sessionsLearning    Session[]           @relation("LearnerSessions")
-  connectionsInitiated Connection[]       @relation("RequesterConnections")
-  connectionsReceived  Connection[]       @relation("AddresseeConnections")
-  notifications       Notification[]
-  pointTransactions   PointTransaction[]
-  ratingsGiven        Rating[]            @relation("RaterRatings")
-  ratingsReceived     Rating[]            @relation("RatedUserRatings")
-  verificationTokens  VerificationToken[]
-  refreshTokens       RefreshToken[]
-  sessionApplications SessionApplication[]
+model User {
+  id                      String           @id @default(cuid())
+  email                   String           @unique
+  username                String           @unique
+  displayName             String
+  passwordHash            String
+  bio                     String?
+  avatarUrl               String?
+  timezone                String           @default("UTC")
+  role                    UserRole         @default(USER)
+  isVerified              Boolean          @default(false)
+  isActive                Boolean          @default(true)
+  isSuspended             Boolean          @default(false)
+  isBanned                Boolean          @default(false)
+  suspendedAt             DateTime?
+  suspendedReason         String?
+  bannedAt                DateTime?
+  bannedReason            String?
+  isOnboardingComplete    Boolean          @default(false)
+  pointsBalance           Int              @default(10)
+  pointsLocked            Int              @default(0)
+  defaultSessionDuration  Int              @default(60)
+  totalSessionsTaught     Int              @default(0)
+  totalSessionsLearned    Int              @default(0)
+  weeklySessionsShared    Int              @default(0)
+  weeklySessionsResetAt   DateTime         @default(now())
+  averageRating           Float?
+  ratingCount             Int              @default(0)
+  isDiscoverable          Boolean          @default(true)
+  reciprocalVisibility    Boolean          @default(false)
+  adEmailOptOut           Boolean          @default(false)
+  notificationPreferences Json?
+  defaultMeetingProvider  MeetingProvider?
+  defaultMeetingUrl       String?
+  lastActiveAt            DateTime?
+  lastPointActivityAt     DateTime         @default(now())
+  createdAt               DateTime         @default(now())
+  updatedAt               DateTime         @updatedAt
+
+  skills               UserSkill[]
+  sessionsTeaching     Session[]            @relation("TeacherSessions")
+  sessionsLearning     Session[]            @relation("LearnerSessions")
+  notifications        Notification[]
+  pointTransactions    PointTransaction[]
+  ratingsGiven         Rating[]             @relation("RaterRatings")
+  ratingsReceived      Rating[]             @relation("RatedUserRatings")
+  verificationTokens   VerificationToken[]
+  refreshTokens        RefreshToken[]
+  sessionApplications  SessionApplication[]
+  availability         Availability[]
+  savedMeetingLinks    SavedMeetingLink[]
+  testimonialsGiven    Testimonial[]        @relation("TestimonialAuthor")
+  testimonialsReceived Testimonial[]        @relation("TestimonialRecipient")
+  flagsReported        Flag[]               @relation("FlagReporter")
+  flagsResolved        Flag[]               @relation("FlagResolver")
+  auditLogs            AuditLog[]           @relation("AuditAdmin")
 
   @@index([email])
   @@index([username])
   @@index([role])
   @@index([isActive])
+  @@index([isSuspended])
   @@index([createdAt])
 }
 
@@ -148,19 +203,23 @@ model VerificationToken {
   @@index([token])
 }
 
+// ─── Skills ───────────────────────────────────────────────────────────────────
+
 model Skill {
-  id          String   @id @default(cuid())
-  name        String   @unique
-  slug        String   @unique
-  description String?
-  category    String
-  subcategory String?
-  iconUrl     String?
-  userCount   Int      @default(0)
-  sessionCount Int     @default(0)
-  isApproved  Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id           String   @id @default(cuid())
+  name         String   @unique
+  slug         String   @unique
+  description  String?
+  category     String
+  subcategory  String?
+  iconUrl      String?
+  userCount    Int      @default(0)
+  sessionCount Int      @default(0)
+  isApproved   Boolean  @default(true)
+  isFeatured   Boolean  @default(false)
+  isDeprecated Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   userSkills UserSkill[]
   sessions   Session[]
@@ -168,6 +227,7 @@ model Skill {
   @@index([slug])
   @@index([category])
   @@index([isApproved])
+  @@index([isFeatured])
   @@index([userCount])
 }
 
@@ -193,39 +253,67 @@ model UserSkill {
   @@index([isLearning])
 }
 
+// ─── Sessions ─────────────────────────────────────────────────────────────────
+
 model Session {
-  id                String        @id @default(cuid())
-  teacherId         String
-  teacher           User          @relation("TeacherSessions", fields: [teacherId], references: [id])
-  learnerId         String?
-  learner           User?         @relation("LearnerSessions", fields: [learnerId], references: [id])
-  skillId           String
-  skill             Skill         @relation(fields: [skillId], references: [id])
-  status            SessionStatus @default(PENDING)
-  sessionType       SessionType   @default(TEACHING)
-  isPublic          Boolean       @default(false)
+  id                  String        @id @default(cuid())
+  teacherId           String
+  teacher             User          @relation("TeacherSessions", fields: [teacherId], references: [id])
+  learnerId           String?
+  learner             User?         @relation("LearnerSessions", fields: [learnerId], references: [id])
+  skillId             String
+  skill               Skill         @relation(fields: [skillId], references: [id])
+  status              SessionStatus @default(PENDING)
+  isPublic            Boolean       @default(false)
+  depthLevel          SkillLevel?
+  agenda              String?
   applicationDeadline DateTime?
-  maxLearners       Int           @default(1)
-  scheduledAt       DateTime
-  durationMinutes   Int           @default(60)
-  meetingUrl        String?
-  notes             String?
-  pointsTransferred Int           @default(5)
-  completedAt       DateTime?
-  cancelledAt       DateTime?
-  cancelReason      String?
-  createdAt         DateTime      @default(now())
-  updatedAt         DateTime      @updatedAt
+  maxLearners         Int           @default(1)
+  scheduledAt         DateTime
+  durationMinutes     Int           @default(60)
+  meetingUrl          String?
+  notes               String?
+  pointsPerSession    Int           @default(5)
+  pointsLocked        Boolean       @default(false)
+  pointsLockedAt      DateTime?
+  completedAt         DateTime?
+  cancelledAt         DateTime?
+  cancelReason        String?
+  availabilityId      String?
+  availability        Availability? @relation(fields: [availabilityId], references: [id])
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
 
   ratings           Rating[]
   pointTransactions PointTransaction[]
   applications      SessionApplication[]
+  testimonials      Testimonial[]
+  flags             Flag[]
 
   @@index([teacherId])
   @@index([learnerId])
   @@index([skillId])
   @@index([status])
+  @@index([isPublic])
   @@index([scheduledAt])
+}
+
+model SessionApplication {
+  id          String                   @id @default(cuid())
+  sessionId   String
+  session     Session                  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  applicantId String
+  applicant   User                     @relation(fields: [applicantId], references: [id], onDelete: Cascade)
+  status      SessionApplicationStatus @default(PENDING)
+  message     String?
+  depthLevel  SkillLevel?
+  createdAt   DateTime                 @default(now())
+  updatedAt   DateTime                 @updatedAt
+
+  @@unique([sessionId, applicantId])
+  @@index([sessionId])
+  @@index([applicantId])
+  @@index([status])
 }
 
 model Rating {
@@ -245,22 +333,92 @@ model Rating {
   @@index([ratedUserId])
 }
 
-model Connection {
-  id          String           @id @default(cuid())
-  requesterId String
-  requester   User             @relation("RequesterConnections", fields: [requesterId], references: [id])
-  addresseeId String
-  addressee   User             @relation("AddresseeConnections", fields: [addresseeId], references: [id])
-  status      ConnectionStatus @default(PENDING)
-  message     String?
-  createdAt   DateTime         @default(now())
-  updatedAt   DateTime         @updatedAt
+model Testimonial {
+  id          String   @id @default(cuid())
+  sessionId   String
+  session     Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  authorId    String
+  author      User     @relation("TestimonialAuthor", fields: [authorId], references: [id])
+  recipientId String
+  recipient   User     @relation("TestimonialRecipient", fields: [recipientId], references: [id])
+  content     String
+  isApproved  Boolean  @default(true)
+  isFlagged   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
-  @@unique([requesterId, addresseeId])
-  @@index([requesterId])
-  @@index([addresseeId])
-  @@index([status])
+  flags Flag[]
+
+  @@unique([sessionId, authorId])
+  @@index([recipientId])
+  @@index([isApproved])
+  @@index([isFlagged])
 }
+
+// ─── Availability ─────────────────────────────────────────────────────────────
+
+model Availability {
+  id        String             @id @default(cuid())
+  userId    String
+  user      User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  startTime DateTime
+  endTime   DateTime
+  status    AvailabilityStatus @default(OPEN)
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @updatedAt
+
+  sessions Session[]
+
+  @@index([userId])
+  @@index([status])
+  @@index([startTime])
+}
+
+// ─── Meeting Links ────────────────────────────────────────────────────────────
+
+model SavedMeetingLink {
+  id        String          @id @default(cuid())
+  userId    String
+  user      User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  label     String
+  url       String
+  provider  MeetingProvider @default(CUSTOM)
+  createdAt DateTime        @default(now())
+
+  @@index([userId])
+}
+
+// ─── Points ───────────────────────────────────────────────────────────────────
+
+model PointTransaction {
+  id           String               @id @default(cuid())
+  userId       String
+  user         User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type         PointTransactionType
+  amount       Int
+  balanceAfter Int
+  description  String
+  sessionId    String?
+  session      Session?             @relation(fields: [sessionId], references: [id])
+  adminNote    String?
+  createdAt    DateTime             @default(now())
+
+  @@index([userId])
+  @@index([sessionId])
+  @@index([createdAt])
+}
+
+model PointConfig {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  value       Int
+  description String
+  updatedById String?
+  updatedAt   DateTime @updatedAt
+  createdAt   DateTime @default(now())
+}
+
+// ─── Notifications ────────────────────────────────────────────────────────────
 
 model Notification {
   id        String           @id @default(cuid())
@@ -278,36 +436,78 @@ model Notification {
   @@index([createdAt])
 }
 
-model PointTransaction {
-  id           String               @id @default(cuid())
-  userId       String
-  user         User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
-  type         PointTransactionType
-  amount       Int
-  balanceAfter Int
-  description  String
-  sessionId    String?
-  session      Session?             @relation(fields: [sessionId], references: [id])
-  createdAt    DateTime             @default(now())
+// ─── Moderation & Flags ───────────────────────────────────────────────────────
 
-  @@index([userId])
-  @@index([sessionId])
+model Flag {
+  id             String         @id @default(cuid())
+  reporterId     String
+  reporter       User           @relation("FlagReporter", fields: [reporterId], references: [id])
+  targetType     FlagTargetType
+  targetId       String
+  reason         String
+  status         FlagStatus     @default(OPEN)
+  resolvedById   String?
+  resolver       User?          @relation("FlagResolver", fields: [resolvedById], references: [id])
+  resolutionNote String?
+  resolvedAt     DateTime?
+  createdAt      DateTime       @default(now())
+
+  session     Session?     @relation(fields: [targetId], references: [id], map: "Flag_sessionId_fkey")
+  testimonial Testimonial? @relation(fields: [targetId], references: [id], map: "Flag_testimonialId_fkey")
+
+  @@index([targetType, targetId])
+  @@index([status])
+  @@index([reporterId])
+}
+
+// ─── Admin ────────────────────────────────────────────────────────────────────
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  adminId     String
+  admin       User     @relation("AuditAdmin", fields: [adminId], references: [id])
+  actionType  String
+  targetType  String
+  targetId    String
+  beforeValue Json?
+  afterValue  Json?
+  reason      String?
+  ipAddress   String?
+  createdAt   DateTime @default(now())
+
+  @@index([adminId])
+  @@index([targetType, targetId])
   @@index([createdAt])
 }
 
-model SessionApplication {
-  id          String                   @id @default(cuid())
-  sessionId   String
-  session     Session                  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
-  applicantId String
-  applicant   User                     @relation(fields: [applicantId], references: [id], onDelete: Cascade)
-  status      SessionApplicationStatus @default(PENDING)
-  message     String?
-  createdAt   DateTime                 @default(now())
-  updatedAt   DateTime                 @updatedAt
+model PlatformConfig {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  value       String
+  description String
+  updatedById String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
 
-  @@unique([sessionId, applicantId])
-  @@index([sessionId])
-  @@index([applicantId])
+// ─── Ads ──────────────────────────────────────────────────────────────────────
+
+model Ad {
+  id             String      @id @default(cuid())
+  advertiserName String
+  title          String
+  body           String
+  targetUrl      String
+  topicCategories String[]
+  placement      AdPlacement @default(ALL)
+  status         AdStatus    @default(ACTIVE)
+  impressions    Int         @default(0)
+  clicks         Int         @default(0)
+  startDate      DateTime?
+  endDate        DateTime?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
   @@index([status])
+  @@index([placement])
 }
