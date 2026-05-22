@@ -14,7 +14,9 @@
       "Bash(Select-Object Name)",
       "Bash(ls -la \"C:\\\\\\\\Users\\\\\\\\UIPL\\\\\\\\Downloads\\\\\\\\oke-prototype\\\\\\\\oke-prototype\\\\\\\\\" 2>/dev/null | head -20)",
       "Bash(cat \"C:\\\\\\\\Users\\\\\\\\UIPL\\\\\\\\Downloads\\\\\\\\oke-prototype\\\\\\\\oke-prototype\\\\\\\\css\\\\\\\\styles.css\")",
-      "Bash(npm run *)"
+      "Bash(npm run *)",
+      "Bash(git push *)",
+      "Bash(gh pr create --title 'Implement OKE Design System on Frontend' --body ' *)"
     ]
   }
 }
