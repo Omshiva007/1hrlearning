@@ -16,7 +16,10 @@
       "Bash(cat \"C:\\\\\\\\Users\\\\\\\\UIPL\\\\\\\\Downloads\\\\\\\\oke-prototype\\\\\\\\oke-prototype\\\\\\\\css\\\\\\\\styles.css\")",
       "Bash(npm run *)",
       "Bash(git push *)",
-      "Bash(gh pr create --title 'Implement OKE Design System on Frontend' --body ' *)"
+      "Bash(gh pr create --title 'Implement OKE Design System on Frontend' --body ' *)",
+      "Bash(curl -s http://localhost:4000/api/v1/auth/register -X POST -H 'Content-Type: application/json' -d '{\"email\":\"test@example.com\",\"password\":\"Test123!\",\"displayName\":\"Test User\"}')",
+      "Bash(npx ts-node --transpile-only -e ' *)",
+      "Bash(git commit -m ' *)"
     ]
   }
 }
