@@ -72,7 +72,7 @@ export function Navigation() {
               </Button>
               <Button
                 size="sm"
-                onClick={() => router.push('/auth/signup')}
+                onClick={() => router.push('/auth/register')}
               >
                 Get started free
               </Button>

@@ -37,7 +37,7 @@ export function Topics() {
         {topics.map((topic) => (
           <button
             key={topic}
-            onClick={() => router.push('/auth/signup')}
+            onClick={() => router.push('/auth/register')}
             className="rounded-full border border-border-strong bg-white px-4 py-2 text-sm text-text-secondary transition-colors hover:bg-bg-secondary hover:text-text-primary"
           >
             {topic}
@@ -45,7 +45,7 @@ export function Topics() {
         ))}
         <button
           className="rounded-full border border-green-deep bg-white px-4 py-2 text-sm font-semibold text-green-deep transition-colors hover:bg-green-light"
-          onClick={() => router.push('/auth/signup')}
+          onClick={() => router.push('/auth/register')}
         >
           View all topics →
         </button>
