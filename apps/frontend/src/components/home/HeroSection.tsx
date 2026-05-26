@@ -33,7 +33,7 @@ export function HeroSection() {
         <div className="mb-8 flex gap-3">
           <Button
             size="lg"
-            onClick={() => router.push('/auth/signup')}
+            onClick={() => router.push('/auth/register')}
             className="font-semibold"
           >
             Start learning free →

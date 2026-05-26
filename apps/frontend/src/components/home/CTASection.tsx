@@ -18,7 +18,7 @@ export function CTASection() {
         <Button
           variant="secondary"
           size="lg"
-          onClick={() => router.push('/auth/signup')}
+          onClick={() => router.push('/auth/register')}
           className="font-semibold"
         >
           Sign up and start learning →
