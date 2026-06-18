@@ -6,12 +6,11 @@ import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
 
 export function Navigation() {
-  const { user, isLoading } = useAuth();
+  const { user, isLoading, logout } = useAuth();
   const router = useRouter();
 
   const handleLogout = async () => {
-    await fetch('/api/auth/logout', { method: 'POST' });
-    router.refresh();
+    await logout();
   };
 
   return (

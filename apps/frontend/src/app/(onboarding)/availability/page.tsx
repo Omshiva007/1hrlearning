@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
+import { api } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 
@@ -79,35 +80,26 @@ export default function OnboardingAvailabilityPage() {
         const [endHour, endMin] = slot.endTime.split(':').map(Number);
         endDate.setHours(endHour, endMin, 0, 0);
 
-        return fetch('/api/v1/availability', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${session?.accessToken}`,
-          },
-          body: JSON.stringify({
+        return api.post(
+          '/availability',
+          {
             startTime: startDate.toISOString(),
             endTime: endDate.toISOString(),
-          }),
-        });
+          },
+          session?.accessToken as string
+        );
       });
 
-      const responses = await Promise.all(promises);
-      if (!responses.every((r) => r.ok)) {
-        throw new Error('Failed to save availability');
-      }
+      await Promise.all(promises);
 
       // Mark onboarding as complete
-      await fetch('/api/v1/users/profile', {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${session?.accessToken}`,
-        },
-        body: JSON.stringify({
+      await api.patch(
+        '/users/profile',
+        {
           isOnboardingComplete: true,
-        }),
-      });
+        },
+        session?.accessToken as string
+      );
 
       // Redirect to dashboard
       router.push('/dashboard');
@@ -169,7 +161,7 @@ export default function OnboardingAvailabilityPage() {
                       type="button"
                       onClick={() => handleRemoveSlot(index)}
                       disabled={isLoading}
-                      className="text-xs text-red-600 hover:text-red-700 disabled:opacity-50"
+                      className="text-xs text-red-600 hover:text-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       Remove
                     </button>
@@ -184,7 +176,7 @@ export default function OnboardingAvailabilityPage() {
                       value={slot.day}
                       onChange={(e) => handleSlotChange(index, 'day', e.target.value)}
                       disabled={isLoading}
-                      className="w-full px-2 py-2 rounded border border-input bg-background text-sm disabled:opacity-50"
+                      className="w-full px-2 py-2 rounded border border-input bg-background text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {DAYS.map((day, dayIndex) => (
                         <option key={dayIndex} value={day}>
@@ -202,7 +194,7 @@ export default function OnboardingAvailabilityPage() {
                       value={slot.startTime}
                       onChange={(e) => handleSlotChange(index, 'startTime', e.target.value)}
                       disabled={isLoading}
-                      className="w-full px-2 py-2 rounded border border-input bg-background text-sm disabled:opacity-50"
+                      className="w-full px-2 py-2 rounded border border-input bg-background text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                     />
                   </div>
 
@@ -214,7 +206,7 @@ export default function OnboardingAvailabilityPage() {
                       value={slot.endTime}
                       onChange={(e) => handleSlotChange(index, 'endTime', e.target.value)}
                       disabled={isLoading}
-                      className="w-full px-2 py-2 rounded border border-input bg-background text-sm disabled:opacity-50"
+                      className="w-full px-2 py-2 rounded border border-input bg-background text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                     />
                   </div>
                 </div>
@@ -227,7 +219,7 @@ export default function OnboardingAvailabilityPage() {
             type="button"
             onClick={handleAddSlot}
             disabled={isLoading}
-            className="w-full py-2 px-4 rounded-lg border-2 border-dashed border-muted hover:border-muted-foreground transition-colors text-sm font-medium disabled:opacity-50"
+            className="w-full py-2 px-4 rounded-lg border-2 border-dashed border-muted hover:border-muted-foreground transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
           >
             + Add Another Time Slot
           </button>

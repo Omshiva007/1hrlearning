@@ -3,24 +3,12 @@
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
+import { api } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Avatar } from '@/components/ui/avatar';
 import Link from 'next/link';
-
-interface Skill {
-  id: string;
-  name: string;
-  category: string;
-}
-
-interface User {
-  id: string;
-  displayName: string;
-  avatarUrl?: string;
-  bio?: string;
-  defaultSessionDuration?: number;
-}
+import type { Skill, User } from '@1hrlearning/shared';
 
 const DURATIONS = [30, 60, 90, 120];
 const DEPTH_LEVELS = [
@@ -53,20 +41,16 @@ export default function SendRequestPage() {
     const fetchData = async () => {
       try {
         // Fetch sharer profile
-        const userRes = await fetch(`/api/v1/users/${userId}`, {
-          headers: { Authorization: `Bearer ${session?.accessToken}` },
-        });
-        if (!userRes.ok) throw new Error('Failed to load sharer profile');
-        const userData = await userRes.json();
-        setSharer(userData.data);
+        const userData = await api.get<User>(`/users/${userId}`, session?.accessToken as string);
+        setSharer(userData);
 
         // Fetch sharer's skills they teach
-        const skillsRes = await fetch(`/api/v1/skills?userId=${userId}&teaching=true`, {
-          headers: { Authorization: `Bearer ${session?.accessToken}` },
-        });
-        if (skillsRes.ok) {
-          const skillsData = await skillsRes.json();
-          setSharableSkills(skillsData.data || []);
+        try {
+          const skillsData = await api.get<Skill[]>(`/skills?userId=${userId}&teaching=true`, session?.accessToken as string);
+          setSharableSkills(Array.isArray(skillsData) ? skillsData : []);
+        } catch {
+          // Skills endpoint might return different format
+          setSharableSkills([]);
         }
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load data');
@@ -103,26 +87,18 @@ export default function SendRequestPage() {
         throw new Error('Please select a skill and schedule time');
       }
 
-      const response = await fetch('/api/v1/sessions/request', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${session?.accessToken}`,
-        },
-        body: JSON.stringify({
+      await api.post(
+        '/sessions/request',
+        {
           sharerId: userId,
           skillId: formData.skillId,
           scheduledAt: new Date(formData.scheduledAt).toISOString(),
           durationMinutes: formData.durationMinutes,
           depthLevel: formData.depthLevel,
           agenda: formData.agenda || undefined,
-        }),
-      });
-
-      if (!response.ok) {
-        const err = await response.json();
-        throw new Error(err.message || 'Failed to send request');
-      }
+        },
+        session?.accessToken as string
+      );
 
       router.push(`/sessions`);
     } catch (err) {
@@ -186,7 +162,7 @@ export default function SendRequestPage() {
               onChange={(e) => setFormData({ ...formData, skillId: e.target.value })}
               disabled={isLoading || sharableSkills.length === 0}
               required
-              className="w-full px-3 py-2 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent disabled:opacity-50"
+              className="w-full px-3 py-2 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <option value="">Select a skill...</option>
               {sharableSkills.map((skill) => (
@@ -208,7 +184,7 @@ export default function SendRequestPage() {
               value={formData.depthLevel}
               onChange={(e) => setFormData({ ...formData, depthLevel: e.target.value })}
               disabled={isLoading}
-              className="w-full px-3 py-2 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent disabled:opacity-50"
+              className="w-full px-3 py-2 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {DEPTH_LEVELS.map((level) => (
                 <option key={level.value} value={level.value}>
@@ -229,7 +205,7 @@ export default function SendRequestPage() {
               value={formData.durationMinutes}
               onChange={(e) => setFormData({ ...formData, durationMinutes: Number(e.target.value) })}
               disabled={isLoading}
-              className="w-full px-3 py-2 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent disabled:opacity-50"
+              className="w-full px-3 py-2 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {DURATIONS.map((duration) => (
                 <option key={duration} value={duration}>
@@ -252,7 +228,7 @@ export default function SendRequestPage() {
               onChange={(e) => setFormData({ ...formData, scheduledAt: e.target.value })}
               disabled={isLoading}
               required
-              className="w-full px-3 py-2 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent disabled:opacity-50"
+              className="w-full px-3 py-2 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
             />
           </div>
 
@@ -268,7 +244,7 @@ export default function SendRequestPage() {
               value={formData.agenda}
               onChange={(e) => setFormData({ ...formData, agenda: e.target.value })}
               disabled={isLoading}
-              className="w-full px-3 py-2 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent disabled:opacity-50 min-h-24"
+              className="w-full px-3 py-2 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed min-h-20 resize-none"
             />
           </div>
 

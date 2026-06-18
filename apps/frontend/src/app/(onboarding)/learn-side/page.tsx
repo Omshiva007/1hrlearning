@@ -4,15 +4,11 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
+import { api, fetchPaginated } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-
-interface Skill {
-  id: string;
-  name: string;
-  category: string;
-}
+import type { Skill } from '@1hrlearning/shared';
 
 const DEPTH_LEVELS = [
   { value: 'BEGINNER', label: 'Beginner', description: 'Just starting out' },
@@ -33,16 +29,8 @@ export default function OnboardingLearnSidePage() {
   useEffect(() => {
     const fetchSkills = async () => {
       try {
-        const response = await fetch('/api/v1/skills', {
-          headers: {
-            Authorization: `Bearer ${session?.accessToken}`,
-          },
-        });
-
-        if (!response.ok) throw new Error('Failed to fetch skills');
-
-        const data = await response.json();
-        setSkills(data.data || []);
+        const result = await fetchPaginated<Skill>('/skills', { limit: 100 }, session?.accessToken as string);
+        setSkills(result.data || []);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load skills');
       } finally {
@@ -89,23 +77,17 @@ export default function OnboardingLearnSidePage() {
     try {
       // Add selected skills as learning skills
       const promises = selectedSkills.map(({ skillId, depth }) =>
-        fetch(`/api/v1/users/skills/${skillId}`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${session?.accessToken}`,
-          },
-          body: JSON.stringify({
+        api.post(
+          `/users/skills/${skillId}`,
+          {
             isLearning: true,
             depthLevel: depth,
-          }),
-        })
+          },
+          session?.accessToken as string
+        )
       );
 
-      const responses = await Promise.all(promises);
-      if (!responses.every((r) => r.ok)) {
-        throw new Error('Failed to save skills');
-      }
+      await Promise.all(promises);
 
       // Move to next step
       router.push('/onboarding/availability');
@@ -163,7 +145,7 @@ export default function OnboardingLearnSidePage() {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               disabled={isLoadingSkills || isLoading}
-              className="w-full px-3 py-2 rounded-md border border-input bg-background text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent disabled:opacity-50"
+              className="w-full px-3 py-2 rounded-md border border-input bg-background text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
             />
           </div>
 

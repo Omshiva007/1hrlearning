@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
+import { api } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -35,22 +36,15 @@ export default function OnboardingProfilePage() {
     setError('');
 
     try {
-      const response = await fetch('/api/v1/users/profile', {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${session?.accessToken}`,
-        },
-        body: JSON.stringify({
+      await api.patch(
+        '/users/profile',
+        {
           displayName: formData.displayName,
           bio: formData.bio,
           timezone: formData.timezone,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to update profile');
-      }
+        },
+        session?.accessToken as string
+      );
 
       // Move to next step
       router.push('/onboarding/share-side');
@@ -129,7 +123,7 @@ export default function OnboardingProfilePage() {
               value={formData.bio}
               onChange={handleChange}
               disabled={isLoading}
-              className="w-full px-3 py-2 rounded-md border border-input bg-background text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed min-h-24"
+              className="w-full px-3 py-2 rounded-md border border-input bg-background text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed resize-none h-24"
             />
             <p className="text-xs text-muted-foreground">
               A short bio to help others get to know you (optional)
