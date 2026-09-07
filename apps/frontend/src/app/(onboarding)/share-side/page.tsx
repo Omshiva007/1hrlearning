@@ -74,15 +74,17 @@ export default function OnboardingShareSidePage() {
     try {
       // Add selected skills as teaching skills
       const promises = selectedSkills.map((skillId) =>
-        fetch(`/api/v1/users/skills/${skillId}`, {
+        fetch('/api/v1/skills/user', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${session?.accessToken}`,
           },
           body: JSON.stringify({
+            skillId,
+            level: 'EXPERT',
             isTeaching: true,
-            proficiency: 'EXPERT',
+            isLearning: false,
           }),
         })
       );

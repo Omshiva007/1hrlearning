@@ -16,6 +16,7 @@ interface Skill {
 
 interface User {
   id: string;
+  username: string;
   displayName: string;
   avatarUrl?: string;
   bio?: string;
@@ -61,12 +62,14 @@ export default function SendRequestPage() {
         setSharer(userData.data);
 
         // Fetch sharer's skills they teach
-        const skillsRes = await fetch(`/api/v1/skills?userId=${userId}&teaching=true`, {
+        const skillsRes = await fetch(`/api/v1/users/${userId}/skills`, {
           headers: { Authorization: `Bearer ${session?.accessToken}` },
         });
         if (skillsRes.ok) {
           const skillsData = await skillsRes.json();
-          setSharableSkills(skillsData.data || []);
+          setSharableSkills((skillsData.data || [])
+            .filter((entry: { isTeaching: boolean }) => entry.isTeaching)
+            .map((entry: { skill: Skill }) => entry.skill));
         }
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load data');
@@ -142,7 +145,7 @@ export default function SendRequestPage() {
 
   return (
     <div className="container mx-auto max-w-2xl px-4 py-8">
-      <Link href={`/profile/${sharer?.id}`} className="text-sm text-primary hover:underline mb-4 inline-block">
+      <Link href={`/profile/${sharer?.username}`} className="text-sm text-primary hover:underline mb-4 inline-block">
         ← Back to profile
       </Link>
 

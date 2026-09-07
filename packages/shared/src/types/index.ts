@@ -8,6 +8,8 @@ export type FlagStatus = 'OPEN' | 'RESOLVED' | 'DISMISSED';
 export type AdStatus = 'ACTIVE' | 'PAUSED' | 'ARCHIVED';
 export type AdPlacement = 'EMAIL' | 'TOPIC_PAGE' | 'DASHBOARD' | 'ALL';
 export type MeetingProvider = 'ZOOM' | 'GOOGLE_MEET' | 'CUSTOM';
+export type SessionType = 'TEACHING' | 'QUERY_CLARIFICATION';
+export type ConnectionStatus = 'PENDING' | 'ACCEPTED' | 'REJECTED' | 'BLOCKED';
 
 export type NotificationType =
   | 'SESSION_REQUEST'
@@ -30,6 +32,10 @@ export type NotificationType =
   | 'TESTIMONIAL_RECEIVED'
   | 'ACCOUNT_SUSPENDED'
   | 'ACCOUNT_REINSTATED'
+  | 'FIRST_MATCH_FOUND'
+  | 'POINTS_EXPIRED'
+  | 'CONNECTION_REQUEST'
+  | 'CONNECTION_ACCEPTED'
   | 'SYSTEM';
 
 export type PointTransactionType =
@@ -90,6 +96,7 @@ export interface PublicUser {
   averageRating: number | null;
   ratingCount: number;
   createdAt: Date;
+  pointsBalance?: number;
   teachingSkills: UserSkill[];
   learningSkills: UserSkill[];
 }
@@ -158,6 +165,7 @@ export interface Session {
   skill: Skill;
   status: SessionStatus;
   isPublic: boolean;
+  sessionType: SessionType;
   depthLevel: SkillLevel | null;
   agenda: string | null;
   applicationDeadline: Date | null;
@@ -168,6 +176,7 @@ export interface Session {
   notes: string | null;
   pointsPerSession: number;
   pointsLocked: boolean;
+  pointsTransferred: number;
   completedAt: Date | null;
   cancelledAt: Date | null;
   cancelReason: string | null;
@@ -316,6 +325,7 @@ export interface MatchScore {
   user: PublicUser;
   fitmentScore: number;
   scoreFactors: FitmentScoreFactors;
+  score: number;
   canTeachMe: Skill[];
   iCanTeach: Skill[];
   matchedSkills: Skill[];

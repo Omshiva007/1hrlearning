@@ -59,7 +59,7 @@ export class BackgroundJobsService {
     const usersWithExpiringPoints = await prisma.pointTransaction.groupBy({
       by: ['userId'],
       where: {
-        type: { in: ['EARNED', 'BONUS'] },
+        type: { in: ['EARNED_TEACHING', 'BONUS'] },
         createdAt: {
           lt: sixMonthsAgo,
           gt: new Date(sixMonthsAgo.getTime() - 1 * 24 * 60 * 60 * 1000), // Within 1 day of 6 months
@@ -150,9 +150,8 @@ export class BackgroundJobsService {
 
     const usersWithStalePoints = await prisma.pointTransaction.findMany({
       where: {
-        type: { in: ['EARNED', 'BONUS'] },
+        type: { in: ['EARNED_TEACHING', 'BONUS'] },
         createdAt: { lt: sixMonthsAgo },
-        status: 'ACTIVE',
       },
       select: { userId: true, amount: true, id: true },
       take: 1000,
@@ -165,7 +164,7 @@ export class BackgroundJobsService {
         await prisma.pointTransaction.create({
           data: {
             userId: transaction.userId,
-            type: 'EXPIRED',
+            type: 'EXPIRY',
             amount: -transaction.amount,
             description: `Points expired after 6 months of inactivity`,
             balanceAfter: 0, // This will be updated by the transaction handler

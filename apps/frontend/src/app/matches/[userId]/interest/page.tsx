@@ -65,12 +65,14 @@ export default function SendInterestPage() {
         setSharer(userData.data);
 
         // Fetch sharer's skills they teach
-        const skillsRes = await fetch(`/api/v1/skills?userId=${userId}&teaching=true`, {
+        const skillsRes = await fetch(`/api/v1/users/${userId}/skills`, {
           headers: { Authorization: `Bearer ${session?.accessToken}` },
         });
         if (skillsRes.ok) {
           const skillsData = await skillsRes.json();
-          setSharableSkills(skillsData.data || []);
+          setSharableSkills((skillsData.data || [])
+            .filter((entry: { isTeaching: boolean }) => entry.isTeaching)
+            .map((entry: { skill: Skill }) => entry.skill));
         }
 
         // Fetch sharer's availability

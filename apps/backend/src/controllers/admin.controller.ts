@@ -1,4 +1,5 @@
 import type { Response, NextFunction } from 'express';
+import type { Prisma } from '@prisma/client';
 import type { AuthenticatedRequest } from '../types';
 import { prisma } from '../utils/prisma';
 import { AppError } from '../types';
@@ -39,8 +40,8 @@ async function writeAuditLog(
       actionType,
       targetType,
       targetId,
-      beforeValue: before ?? null,
-      afterValue: after ?? null,
+      beforeValue: before as Prisma.InputJsonValue | undefined,
+      afterValue: after as Prisma.InputJsonValue | undefined,
       reason,
       ipAddress: ip ?? null,
     },
@@ -485,7 +486,6 @@ export const adminController = {
           testimonials: true,
           pointTransactions: { orderBy: { createdAt: 'asc' } },
           flags: { include: { reporter: { select: { id: true, username: true } } } },
-          auditLogs: { orderBy: { createdAt: 'desc' } },
         },
       });
       if (!session) throw new AppError('Session not found', 404);

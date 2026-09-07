@@ -12,19 +12,19 @@ const auth = requireAuth as unknown as (req: Request, res: Response, next: NextF
 router.use(auth);
 
 router.get('/me', (req, res, next) =>
-  availabilityController.getForUser(req as AuthenticatedRequest, res, next),
+  availabilityController.getForUser(req as unknown as AuthenticatedRequest, res, next),
 );
 router.get('/:userId', (req, res, next) =>
-  availabilityController.getForUser(req as AuthenticatedRequest, res, next),
+  availabilityController.getForUser(req as unknown as AuthenticatedRequest, res, next),
 );
 router.post('/', validate(createAvailabilitySchema), (req, res, next) =>
-  availabilityController.create(req as AuthenticatedRequest, res, next),
+  availabilityController.create(req as unknown as AuthenticatedRequest, res, next),
 );
 router.patch('/:id', validate(updateAvailabilitySchema), (req, res, next) =>
-  availabilityController.update(req as AuthenticatedRequest, res, next),
+  availabilityController.update(req as unknown as AuthenticatedRequest, res, next),
 );
 router.delete('/:id', (req, res, next) =>
-  availabilityController.remove(req as AuthenticatedRequest, res, next),
+  availabilityController.remove(req as unknown as AuthenticatedRequest, res, next),
 );
 
 export default router;

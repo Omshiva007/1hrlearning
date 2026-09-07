@@ -54,7 +54,7 @@ export default async function SkillsPage({ searchParams }: PageProps) {
         <Link
           href="/skills"
           className={`px-3 py-1 rounded-full text-sm border transition-colors ${
-            !searchParams.category ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'
+            !resolvedParams.category ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'
           }`}
         >
           All
@@ -64,7 +64,7 @@ export default async function SkillsPage({ searchParams }: PageProps) {
             key={cat}
             href={`/skills?category=${encodeURIComponent(cat)}`}
             className={`px-3 py-1 rounded-full text-sm border transition-colors ${
-              searchParams.category === cat ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'
+              resolvedParams.category === cat ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'
             }`}
           >
             {cat}

@@ -10,6 +10,13 @@ const NAV_ITEMS = [
   { href: '/skills', label: 'Skills', icon: '🛠️' },
   { href: '/categories', label: 'Categories', icon: '🏷️' },
   { href: '/users', label: 'Users', icon: '👥' },
+  { href: '/sessions', label: 'Sessions', icon: 'S' },
+  { href: '/points', label: 'Points', icon: 'P' },
+  { href: '/analytics', label: 'Analytics', icon: 'A' },
+  { href: '/moderation', label: 'Moderation', icon: 'M' },
+  { href: '/config', label: 'Configuration', icon: 'C' },
+  { href: '/audit', label: 'Audit Log', icon: 'L' },
+  { href: '/ads', label: 'Ads', icon: 'R' },
 ];
 
 export function AdminNav() {

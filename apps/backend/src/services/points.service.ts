@@ -6,7 +6,7 @@ import { notificationService } from './notification.service';
 import { emailService } from './email.service';
 
 /** Returns points for a given duration based on the 30-min=5-pts base rule (or configured rate). */
-export function calcSessionPoints(durationMinutes: number, pointsPer30Min = POINTS.PER_30_MIN): number {
+export function calcSessionPoints(durationMinutes: number, pointsPer30Min: number = POINTS.PER_30_MIN): number {
   return Math.round((durationMinutes / 30) * pointsPer30Min);
 }
 
@@ -187,7 +187,13 @@ export class PointsService {
         }),
       ]);
 
-      await tx.session.update({ where: { id: sessionId }, data: { pointsLocked: false } });
+      await tx.session.update({
+        where: { id: sessionId },
+        data: {
+          pointsLocked: false,
+          pointsTransferred: amount,
+        },
+      });
     });
   }
 

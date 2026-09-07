@@ -98,8 +98,8 @@ export default function OnboardingAvailabilityPage() {
       }
 
       // Mark onboarding as complete
-      await fetch('/api/v1/users/profile', {
-        method: 'PATCH',
+      const completionResponse = await fetch('/api/v1/users/me', {
+        method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${session?.accessToken}`,
@@ -110,6 +110,9 @@ export default function OnboardingAvailabilityPage() {
       });
 
       // Redirect to dashboard
+      if (!completionResponse.ok) {
+        throw new Error('Failed to complete onboarding');
+      }
       router.push('/dashboard');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');

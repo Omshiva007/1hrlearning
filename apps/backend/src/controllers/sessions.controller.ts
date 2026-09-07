@@ -11,15 +11,34 @@ export const sessionsController = {
       next(error);
     }
   },
+  async interest(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const session = await sessionsService.sendInterest(req.user.id, req.body);
+      res.status(201).json({ success: true, data: session });
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  async request(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const session = await sessionsService.sendSessionRequest(req.user.id, req.body);
+      res.status(201).json({ success: true, data: session });
+    } catch (error) {
+      next(error);
+    }
+  },
+
 
   async list(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
     try {
-      const { role = 'all', page = 1, limit = 20 } = req.query;
+      const { role = 'all', page = 1, limit = 20, status } = req.query;
       const result = await sessionsService.getSessions(
         req.user.id,
         role as 'teacher' | 'learner' | 'all',
         Number(page),
         Number(limit),
+        status as string | undefined,
       );
       res.json({ success: true, ...result });
     } catch (error) {

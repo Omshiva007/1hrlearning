@@ -183,6 +183,7 @@ export class MatchingService {
       scored.push({
         userId: candidate.id,
         fitmentScore: total,
+        score: total,
         _total: total,
         scoreFactors: {
           topicMatch,

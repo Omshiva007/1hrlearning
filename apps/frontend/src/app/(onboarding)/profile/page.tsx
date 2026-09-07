@@ -35,8 +35,8 @@ export default function OnboardingProfilePage() {
     setError('');
 
     try {
-      const response = await fetch('/api/v1/users/profile', {
-        method: 'PATCH',
+      const response = await fetch('/api/v1/users/me', {
+        method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${session?.accessToken}`,

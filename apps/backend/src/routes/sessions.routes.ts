@@ -2,6 +2,8 @@ import { Router } from 'express';
 import type { Request, Response, NextFunction } from 'express';
 import { sessionsController } from '../controllers/sessions.controller';
 import { requireAuth } from '../middleware/auth';
+import { sendInterestSchema, sendSessionRequestSchema } from '@1hrlearning/shared';
+
 import { validate } from '../middleware/validate';
 import { createSessionSchema, updateSessionSchema, rateSessionSchema, applyToSessionSchema, updateSessionApplicationSchema } from '@1hrlearning/shared';
 import type { AuthenticatedRequest } from '../types';
@@ -14,6 +16,8 @@ const wrap = (fn: (req: AuthenticatedRequest, res: Response, next: NextFunction)
 
 router.get('/discover', auth, wrap(sessionsController.discover));
 router.get('/', auth, wrap(sessionsController.list));
+router.post('/interest', auth, validate(sendInterestSchema), wrap(sessionsController.interest));
+router.post('/request', auth, validate(sendSessionRequestSchema), wrap(sessionsController.request));
 router.get('/:id', auth, wrap(sessionsController.getById));
 router.post('/', auth, validate(createSessionSchema), wrap(sessionsController.create));
 router.patch('/:id', auth, validate(updateSessionSchema), wrap(sessionsController.update));

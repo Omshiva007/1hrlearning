@@ -45,6 +45,18 @@ enum SessionApplicationStatus {
   REJECTED
 }
 
+enum SessionType {
+  TEACHING
+  QUERY_CLARIFICATION
+}
+
+enum ConnectionStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  BLOCKED
+}
+
 enum AvailabilityStatus {
   OPEN
   HELD
@@ -97,6 +109,10 @@ enum NotificationType {
   TESTIMONIAL_RECEIVED
   ACCOUNT_SUSPENDED
   ACCOUNT_REINSTATED
+  FIRST_MATCH_FOUND
+  POINTS_EXPIRED
+  CONNECTION_REQUEST
+  CONNECTION_ACCEPTED
   SYSTEM
 }
 
@@ -114,43 +130,44 @@ enum PointTransactionType {
 // ─── Core Models ──────────────────────────────────────────────────────────────
 
 model User {
-  id                      String           @id @default(cuid())
-  email                   String           @unique
-  username                String           @unique
-  displayName             String
-  passwordHash            String
-  bio                     String?
-  avatarUrl               String?
-  timezone                String           @default("UTC")
-  role                    UserRole         @default(USER)
-  isVerified              Boolean          @default(false)
-  isActive                Boolean          @default(true)
-  isSuspended             Boolean          @default(false)
-  isBanned                Boolean          @default(false)
-  suspendedAt             DateTime?
-  suspendedReason         String?
-  bannedAt                DateTime?
-  bannedReason            String?
-  isOnboardingComplete    Boolean          @default(false)
-  pointsBalance           Int              @default(10)
-  pointsLocked            Int              @default(0)
-  defaultSessionDuration  Int              @default(60)
-  totalSessionsTaught     Int              @default(0)
-  totalSessionsLearned    Int              @default(0)
-  weeklySessionsShared    Int              @default(0)
-  weeklySessionsResetAt   DateTime         @default(now())
-  averageRating           Float?
-  ratingCount             Int              @default(0)
-  isDiscoverable          Boolean          @default(true)
-  reciprocalVisibility    Boolean          @default(false)
-  adEmailOptOut           Boolean          @default(false)
-  notificationPreferences Json?
-  defaultMeetingProvider  MeetingProvider?
-  defaultMeetingUrl       String?
-  lastActiveAt            DateTime?
-  lastPointActivityAt     DateTime         @default(now())
-  createdAt               DateTime         @default(now())
-  updatedAt               DateTime         @updatedAt
+  id                       String           @id @default(cuid())
+  email                    String           @unique
+  username                 String           @unique
+  displayName              String
+  passwordHash             String
+  bio                      String?
+  avatarUrl                String?
+  timezone                 String           @default("UTC")
+  role                     UserRole         @default(USER)
+  isVerified               Boolean          @default(false)
+  isActive                 Boolean          @default(true)
+  isSuspended              Boolean          @default(false)
+  isBanned                 Boolean          @default(false)
+  suspendedAt              DateTime?
+  suspendedReason          String?
+  bannedAt                 DateTime?
+  bannedReason             String?
+  isOnboardingComplete     Boolean          @default(false)
+  pointsBalance            Int              @default(10)
+  pointsLocked             Int              @default(0)
+  defaultSessionDuration   Int              @default(60)
+  totalSessionsTaught      Int              @default(0)
+  totalSessionsLearned     Int              @default(0)
+  weeklySessionsShared     Int              @default(0)
+  weeklySessionsResetAt    DateTime         @default(now())
+  averageRating            Float?
+  ratingCount              Int              @default(0)
+  isDiscoverable           Boolean          @default(true)
+  reciprocalVisibility     Boolean          @default(false)
+  adEmailOptOut            Boolean          @default(false)
+  notificationPreferences  Json?
+  defaultMeetingProvider   MeetingProvider?
+  defaultMeetingUrl        String?
+  lastActiveAt             DateTime?
+  lastPointActivityAt      DateTime         @default(now())
+  createdAt                DateTime         @default(now())
+  lastOnboardingReminderAt DateTime?
+  updatedAt                DateTime         @updatedAt
 
   skills               UserSkill[]
   sessionsTeaching     Session[]            @relation("TeacherSessions")
@@ -169,6 +186,9 @@ model User {
   flagsReported        Flag[]               @relation("FlagReporter")
   flagsResolved        Flag[]               @relation("FlagResolver")
   auditLogs            AuditLog[]           @relation("AuditAdmin")
+
+  connectionsRequested Connection[] @relation("ConnectionRequester")
+  connectionsReceived  Connection[] @relation("ConnectionAddressee")
 
   @@index([email])
   @@index([username])
@@ -266,6 +286,7 @@ model Session {
   status              SessionStatus @default(PENDING)
   isPublic            Boolean       @default(false)
   depthLevel          SkillLevel?
+  sessionType         SessionType   @default(TEACHING)
   agenda              String?
   applicationDeadline DateTime?
   maxLearners         Int           @default(1)
@@ -276,6 +297,7 @@ model Session {
   pointsPerSession    Int           @default(5)
   pointsLocked        Boolean       @default(false)
   pointsLockedAt      DateTime?
+  pointsTransferred   Int           @default(0)
   completedAt         DateTime?
   cancelledAt         DateTime?
   cancelReason        String?
@@ -296,6 +318,23 @@ model Session {
   @@index([status])
   @@index([isPublic])
   @@index([scheduledAt])
+}
+
+model Connection {
+  id          String           @id @default(cuid())
+  requesterId String
+  requester   User             @relation("ConnectionRequester", fields: [requesterId], references: [id], onDelete: Cascade)
+  addresseeId String
+  addressee   User             @relation("ConnectionAddressee", fields: [addresseeId], references: [id], onDelete: Cascade)
+  status      ConnectionStatus @default(PENDING)
+  message     String?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  @@unique([requesterId, addresseeId])
+  @@index([requesterId])
+  @@index([addresseeId])
+  @@index([status])
 }
 
 model SessionApplication {
@@ -493,20 +532,20 @@ model PlatformConfig {
 // ─── Ads ──────────────────────────────────────────────────────────────────────
 
 model Ad {
-  id             String      @id @default(cuid())
-  advertiserName String
-  title          String
-  body           String
-  targetUrl      String
+  id              String      @id @default(cuid())
+  advertiserName  String
+  title           String
+  body            String
+  targetUrl       String
   topicCategories String[]
-  placement      AdPlacement @default(ALL)
-  status         AdStatus    @default(ACTIVE)
-  impressions    Int         @default(0)
-  clicks         Int         @default(0)
-  startDate      DateTime?
-  endDate        DateTime?
-  createdAt      DateTime    @default(now())
-  updatedAt      DateTime    @updatedAt
+  placement       AdPlacement @default(ALL)
+  status          AdStatus    @default(ACTIVE)
+  impressions     Int         @default(0)
+  clicks          Int         @default(0)
+  startDate       DateTime?
+  endDate         DateTime?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
 
   @@index([status])
   @@index([placement])

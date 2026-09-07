@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import { auth } from '@/lib/auth';
 import type { Metadata } from 'next';
+import { NotificationsClient } from './NotificationsClient';
 
 export const metadata: Metadata = {
   title: 'Notifications | 1hrLearning',
@@ -11,6 +12,7 @@ export default async function NotificationsPage() {
   const session = await auth();
   if (!session) redirect('/login');
 
+  return <div className="container mx-auto max-w-3xl px-4 py-8"><NotificationsClient token={session.accessToken} /></div>;
   return (
     <div className="container mx-auto max-w-3xl px-4 py-8">
       <div className="flex items-center justify-between mb-8">

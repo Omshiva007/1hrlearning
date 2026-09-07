@@ -31,9 +31,21 @@ const nextConfig: NextConfig = {
   async rewrites() {
     return [
       {
+        source: '/api/v1/:path*',
+        destination: `${process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000/api/v1'}/:path*`,
+      },
+      {
         source: '/api/backend/:path*',
         destination: `${process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000/api/v1'}/:path*`,
       },
+    ];
+  },
+  async redirects() {
+    return [
+      { source: '/onboarding', destination: '/profile', permanent: false },
+      { source: '/onboarding/:path*', destination: '/:path*', permanent: false },
+      { source: '/auth/login', destination: '/login', permanent: false },
+      { source: '/auth/register', destination: '/register', permanent: false },
     ];
   },
 };

@@ -70,6 +70,7 @@ export const updateProfileSchema = z.object({
     'Duration must be 30, 60, 90, or 120 minutes',
   ).optional(),
   notificationPreferences: z.record(z.boolean()).optional(),
+  isOnboardingComplete: z.boolean().optional(),
 });
 
 export const onboardingProfileSchema = z.object({
@@ -154,6 +155,7 @@ export const createMeetingLinkSchema = z.object({
 const VALID_DURATIONS = [30, 60, 90, 120] as const;
 
 export const createSessionSchema = z.object({
+  sessionType: z.enum(['TEACHING', 'QUERY_CLARIFICATION']).default('TEACHING'),
   learnerId: z.string().cuid('Invalid learner ID').optional(),
   skillId: z.string().cuid('Invalid skill ID'),
   scheduledAt: z.string().datetime('Invalid date format'),
@@ -186,7 +188,8 @@ export const sendInterestSchema = z.object({
 export const sendSessionRequestSchema = z.object({
   skillId: z.string().cuid('Invalid skill ID'),
   sharerId: z.string().cuid('Invalid sharer ID'),
-  availabilityId: z.string().cuid('Invalid availability slot ID'),
+  availabilityId: z.string().cuid('Invalid availability slot ID').optional(),
+  scheduledAt: z.string().datetime('Invalid date format').optional(),
   durationMinutes: z
     .number()
     .int()
@@ -194,6 +197,8 @@ export const sendSessionRequestSchema = z.object({
     .default(60),
   depthLevel: z.enum(['BEGINNER', 'INTERMEDIATE', 'ADVANCED', 'EXPERT']),
   agenda: z.string().min(1, 'Agenda is required').max(1000),
+}).refine((value) => value.availabilityId || value.scheduledAt, {
+  message: 'Choose an availability slot or scheduled time',
 });
 
 export const updateSessionSchema = z.object({
@@ -211,6 +216,15 @@ export const rateSessionSchema = z.object({
 
 export const createTestimonialSchema = z.object({
   content: z.string().min(10, 'Testimonial must be at least 10 characters').max(1000),
+});
+
+export const createConnectionSchema = z.object({
+  addresseeId: z.string().cuid('Invalid addressee ID'),
+  message: z.string().max(500).nullable().optional(),
+});
+
+export const updateConnectionSchema = z.object({
+  status: z.enum(['ACCEPTED', 'REJECTED', 'BLOCKED']),
 });
 
 // ─── Flagging ─────────────────────────────────────────────────────────────────
@@ -356,3 +370,5 @@ export type UpdatePlatformConfigInput = z.infer<typeof updatePlatformConfigSchem
 export type CreateAdInput = z.infer<typeof createAdSchema>;
 export type UpdateAdInput = z.infer<typeof updateAdSchema>;
 export type AdminSessionOverrideInput = z.infer<typeof adminSessionOverrideSchema>;
+export type CreateConnectionInput = z.infer<typeof createConnectionSchema>;
+export type UpdateConnectionInput = z.infer<typeof updateConnectionSchema>;

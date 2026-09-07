@@ -83,14 +83,16 @@ export class SessionsService {
     const [sharer, skill, availability, learner] = await Promise.all([
       prisma.user.findUnique({ where: { id: input.sharerId } }),
       prisma.skill.findUnique({ where: { id: input.skillId } }),
-      prisma.availability.findUnique({ where: { id: input.availabilityId } }),
+      input.availabilityId
+        ? prisma.availability.findUnique({ where: { id: input.availabilityId } })
+        : Promise.resolve(null),
       prisma.user.findUnique({ where: { id: learnerId }, select: { displayName: true, pointsBalance: true } }),
     ]);
 
     if (!sharer || sharer.isSuspended || sharer.isBanned) throw new AppError('Sharer not available', 404);
     if (!skill) throw new AppError('Skill not found', 404);
-    if (!availability || availability.userId !== input.sharerId) throw new AppError('Availability slot not found', 404);
-    if (availability.status !== 'OPEN') throw new AppError('This slot is no longer available', 400);
+    if (availability && availability.userId !== input.sharerId) throw new AppError('Availability slot not found', 404);
+    if (availability && availability.status !== 'OPEN') throw new AppError('This slot is no longer available', 400);
     if (!learner) throw new AppError('User not found', 404);
     if (learnerId === input.sharerId) throw new AppError('Cannot send a request to yourself', 400);
 
@@ -106,22 +108,24 @@ export class SessionsService {
         teacherId: input.sharerId,
         learnerId,
         skillId: input.skillId,
-        scheduledAt: availability.startTime,
+        scheduledAt: availability?.startTime ?? new Date(input.scheduledAt!),
         durationMinutes: input.durationMinutes,
         isPublic: false,
         status: 'PENDING',
         depthLevel: input.depthLevel,
         agenda: input.agenda,
-        availabilityId: input.availabilityId,
+        availabilityId: input.availabilityId ?? null,
         pointsPerSession: pointsRequired,
       },
       include: { skill: true, teacher: { select: { id: true, displayName: true } } },
     });
 
-    await prisma.availability.update({
-      where: { id: input.availabilityId },
-      data: { status: 'HELD' },
-    });
+    if (input.availabilityId) {
+      await prisma.availability.update({
+        where: { id: input.availabilityId },
+        data: { status: 'HELD' },
+      });
+    }
 
     await notificationService.create(input.sharerId, {
       type: 'SESSION_REQUEST',

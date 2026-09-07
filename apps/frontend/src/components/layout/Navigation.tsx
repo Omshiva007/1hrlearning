@@ -66,7 +66,7 @@ export function Navigation() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => router.push('/auth/login')}
+                onClick={() => router.push('/login')}
               >
                 Log in
               </Button>
@@ -82,7 +82,7 @@ export function Navigation() {
             <>
               <div className="flex items-center gap-2">
                 <span className="text-sm text-text-primary">
-                  {user.displayName || user.email}
+                  {user.name || user.email}
                 </span>
               </div>
               <Button variant="outline" size="sm" onClick={handleLogout}>

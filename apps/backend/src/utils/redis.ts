@@ -2,6 +2,7 @@ import Redis from 'ioredis';
 import { config } from '../config';
 import { logger } from './logger';
 
+let redisAvailable = false;
 export const redis = new Redis(config.redis.url, {
   maxRetriesPerRequest: 3,
   lazyConnect: true,
@@ -19,12 +20,16 @@ redis.on('error', (err) => logger.error('Redis error:', err));
 redis.on('close', () => logger.warn('Redis connection closed'));
 
 export async function connectRedis(): Promise<void> {
+    redisAvailable = true;
   try {
     await redis.connect();
     logger.info('✅ Redis ready');
   } catch (error) {
     logger.error('❌ Redis connection failed:', error);
-    throw error;
+    redisAvailable = false;
+    if (config.isProd) throw error;
+    logger.warn('Redis unavailable; continuing without cache in development');
+    redis.disconnect();
   }
 }
 
@@ -34,7 +39,7 @@ export async function disconnectRedis(): Promise<void> {
 }
 
 export const cacheGet = async <T>(key: string): Promise<T | null> => {
-  const data = await redis.get(key);
+  const data = redisAvailable ? await redis.get(key).catch(() => null) : null;
   if (!data) return null;
   try {
     return JSON.parse(data) as T;
@@ -44,6 +49,7 @@ export const cacheGet = async <T>(key: string): Promise<T | null> => {
 };
 
 export const cacheSet = async <T>(key: string, value: T, ttlSeconds?: number): Promise<void> => {
+  if (!redisAvailable) return;
   const serialized = JSON.stringify(value);
   if (ttlSeconds) {
     await redis.setex(key, ttlSeconds, serialized);
@@ -53,7 +59,7 @@ export const cacheSet = async <T>(key: string, value: T, ttlSeconds?: number): P
 };
 
 export const cacheDel = async (...keys: string[]): Promise<void> => {
-  if (keys.length > 0) {
+  if (redisAvailable && keys.length > 0) {
     await redis.del(...keys);
   }
 };
