@@ -52,6 +52,7 @@ export const authController = {
 
   async me(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
     try {
+      // Load lazily to avoid extending the controller/service import cycle during application startup.
       const { usersService } = await import('../services/users.service');
       const user = await usersService.getUserById(req.user.id);
       res.json({ success: true, data: user });

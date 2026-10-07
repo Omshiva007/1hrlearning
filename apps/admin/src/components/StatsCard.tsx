@@ -1,3 +1,4 @@
+// Dashboard statistic cards keep aggregate values and supporting context visually consistent.
 interface StatsCardProps {
   title: string;
   value: number | string;

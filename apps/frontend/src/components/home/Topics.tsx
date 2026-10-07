@@ -1,3 +1,4 @@
+// Topic tiles provide curated discovery shortcuts while animation remains a progressive enhancement.
 'use client';
 
 import { useRouter } from 'next/navigation';

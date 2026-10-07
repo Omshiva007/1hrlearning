@@ -91,6 +91,7 @@ export function useAdminCreateSkill() {
     mutationFn: (input: CreateSkillInput) =>
       apiClient.post<Skill>('/admin/skills', input, token ?? undefined),
     onSuccess: () => {
+      // Skill mutations affect both the resource list and aggregate dashboard counts.
       void queryClient.invalidateQueries({ queryKey: ['admin', 'skills'] });
       void queryClient.invalidateQueries({ queryKey: ['admin', 'dashboard'] });
     },
@@ -104,6 +105,7 @@ export function useAdminUpdateSkill() {
     mutationFn: ({ id, input }: { id: string; input: UpdateSkillInput }) =>
       apiClient.put<Skill>(`/admin/skills/${id}`, input, token ?? undefined),
     onSuccess: () => {
+      // Refresh list and aggregates because category and approval changes can alter dashboard totals.
       void queryClient.invalidateQueries({ queryKey: ['admin', 'skills'] });
       void queryClient.invalidateQueries({ queryKey: ['admin', 'dashboard'] });
     },
@@ -117,6 +119,7 @@ export function useAdminDeleteSkill() {
     mutationFn: (id: string) =>
       apiClient.delete(`/admin/skills/${id}`, token ?? undefined),
     onSuccess: () => {
+      // Deleted records must disappear from the list and from dashboard aggregates together.
       void queryClient.invalidateQueries({ queryKey: ['admin', 'skills'] });
       void queryClient.invalidateQueries({ queryKey: ['admin', 'dashboard'] });
     },
@@ -166,6 +169,7 @@ export function useAdminUpdateUserRole() {
     mutationFn: ({ id, role }: { id: string; role: string }) =>
       apiClient.patch(`/admin/users/${id}/role`, { role }, token ?? undefined),
     onSuccess: () => {
+      // Role changes affect the user table and may affect role-based dashboard statistics.
       void queryClient.invalidateQueries({ queryKey: ['admin', 'users'] });
       void queryClient.invalidateQueries({ queryKey: ['admin', 'dashboard'] });
     },
@@ -179,6 +183,7 @@ export function useAdminUpdateUserStatus() {
     mutationFn: ({ id, isActive }: { id: string; isActive: boolean }) =>
       apiClient.patch(`/admin/users/${id}/status`, { isActive }, token ?? undefined),
     onSuccess: () => {
+      // Status changes alter both row state and active-user aggregates.
       void queryClient.invalidateQueries({ queryKey: ['admin', 'users'] });
       void queryClient.invalidateQueries({ queryKey: ['admin', 'dashboard'] });
     },

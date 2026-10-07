@@ -1,3 +1,4 @@
+// Shared presentation helpers keep class merging and display formatting consistent across pages.
 import { type ClassValue, clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 

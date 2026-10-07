@@ -1,5 +1,7 @@
 import { Router } from 'express';
 import type { Request, Response, NextFunction } from 'express';
+
+// Public discovery remains readable while profile mutations require authenticated ownership checks.
 import { skillsController } from '../controllers/skills.controller';
 import { requireAuth } from '../middleware/auth';
 import { validate } from '../middleware/validate';

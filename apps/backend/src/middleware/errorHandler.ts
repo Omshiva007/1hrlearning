@@ -15,6 +15,7 @@ export function errorHandler(
 ): void {
   const isAppError = err instanceof AppError;
   const statusCode = isAppError ? err.statusCode : 500;
+  // Unexpected errors receive a generic response so internal details never leak in production.
   const message = isAppError ? err.message : 'Internal server error';
 
   if (statusCode >= 500) {
@@ -29,6 +30,7 @@ export function errorHandler(
     success: false,
     message,
     ...(isAppError && err.errors ? { errors: err.errors } : {}),
+    // Stack traces are restricted to development and only for unexpected failures.
     ...(config.isDev && !isAppError ? { stack: err.stack } : {}),
   });
 }

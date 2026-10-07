@@ -1,6 +1,8 @@
 import { prisma } from '../utils/prisma';
 import { Prisma } from '@prisma/client';
 import { AppError } from '../types';
+
+// Notification persistence is centralized here so read-state and delivery semantics stay consistent across callers.
 import type { NotificationType } from '@1hrlearning/shared';
 
 interface CreateNotificationInput {

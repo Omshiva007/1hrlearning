@@ -1,3 +1,4 @@
+// Resolve a public skill on the server so invalid identifiers become a proper Next.js not-found response.
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import Link from 'next/link';

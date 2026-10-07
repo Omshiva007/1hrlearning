@@ -1,3 +1,4 @@
+// Login validates user input locally before delegating credential verification to NextAuth and the backend.
 'use client';
 
 import { useState } from 'react';

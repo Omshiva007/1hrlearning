@@ -3,6 +3,7 @@ import type { AuthenticatedRequest } from '../types';
 import { sessionsService } from '../services/sessions.service';
 
 export const sessionsController = {
+  // Controllers deliberately stay transport-only; session authorization and state transitions remain in the service layer.
   async create(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
     try {
       const session = await sessionsService.createSession(req.user.id, req.body);
@@ -123,6 +124,7 @@ export const sessionsController = {
   async calendar(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
     try {
       const ics = await sessionsService.generateCalendarIcs(req.params.id, req.user.id);
+      // Force a calendar download while preserving UTF-8 event content.
       res.setHeader('Content-Type', 'text/calendar; charset=utf-8');
       res.setHeader('Content-Disposition', `attachment; filename="session-${req.params.id}.ics"`);
       res.send(ics);

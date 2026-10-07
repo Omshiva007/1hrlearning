@@ -1,3 +1,4 @@
+// Resolve authentication and session access server-side before exposing session-specific details.
 import { redirect, notFound } from 'next/navigation';
 import Link from 'next/link';
 import { auth } from '@/lib/auth';

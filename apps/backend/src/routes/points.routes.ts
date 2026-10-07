@@ -1,5 +1,7 @@
 import { Router } from 'express';
 import type { Request, Response, NextFunction } from 'express';
+
+// Points endpoints are read-oriented; ledger writes occur through validated domain workflows instead.
 import { pointsController } from '../controllers/points.controller';
 import { requireAuth } from '../middleware/auth';
 import type { AuthenticatedRequest } from '../types';

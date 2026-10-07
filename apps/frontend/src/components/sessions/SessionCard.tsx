@@ -1,3 +1,4 @@
+// Session cards normalize role and status presentation across dashboard and session-list contexts.
 import Link from 'next/link';
 import type { Session } from '@1hrlearning/shared';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';

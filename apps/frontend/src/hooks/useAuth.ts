@@ -9,6 +9,7 @@ export function useAuth() {
   const { setUser, clearUser } = useAuthStore();
 
   const logout = useCallback(async () => {
+    // Clear optimistic client state before NextAuth redirects so protected UI disappears immediately.
     clearUser();
     await signOut({ callbackUrl: '/' });
   }, [clearUser]);

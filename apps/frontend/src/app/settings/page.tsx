@@ -1,3 +1,4 @@
+// Authenticate on the server before rendering settings that expose account-level preferences.
 import { redirect } from 'next/navigation';
 import { auth } from '@/lib/auth';
 import type { Metadata } from 'next';

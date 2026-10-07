@@ -2,6 +2,8 @@ import type { Request, Response, NextFunction } from 'express';
 import type { AuthenticatedRequest } from '../types';
 import { notificationService } from '../services/notification.service';
 
+// These transport handlers always scope notification access to the authenticated user supplied by middleware.
+
 export const notificationsController = {
   async list(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
     try {

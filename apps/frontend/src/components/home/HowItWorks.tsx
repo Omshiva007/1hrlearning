@@ -1,3 +1,4 @@
+// This section explains the canonical learn-and-share lifecycle in a compact ordered sequence.
 'use client';
 
 export function HowItWorks() {

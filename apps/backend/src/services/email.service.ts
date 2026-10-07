@@ -7,6 +7,7 @@ if (config.email.sendgridApiKey) {
 }
 
 function htmlEncode(str: string): string {
+  // All user-controlled values interpolated into HTML email bodies must pass through this encoder.
   return str
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
@@ -16,6 +17,7 @@ function htmlEncode(str: string): string {
 
 export class EmailService {
   private async send(to: string, subject: string, html: string): Promise<void> {
+    // Local environments intentionally degrade to logging when no provider credential is configured.
     if (!config.email.sendgridApiKey) {
       logger.debug(`[Email] Would send to ${to}: ${subject}`);
       return;
@@ -30,6 +32,7 @@ export class EmailService {
       });
       logger.info(`Email sent to ${to}: ${subject}`);
     } catch (error) {
+      // Email is a side effect; provider failure is logged without failing the already-completed business action.
       logger.error('Failed to send email:', error);
     }
   }

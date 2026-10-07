@@ -1,3 +1,4 @@
+// Centralize canonical and social metadata construction so public pages emit consistent discovery signals.
 import type { Metadata } from 'next';
 
 const SITE_NAME = '1hrLearning';

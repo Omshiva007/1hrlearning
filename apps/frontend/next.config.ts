@@ -1,3 +1,4 @@
+// Frontend build behavior, image policy, and shared-package transpilation live in this configuration.
 import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {

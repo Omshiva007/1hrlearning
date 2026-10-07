@@ -1,5 +1,7 @@
 import { Router } from 'express';
 import type { Request, Response, NextFunction } from 'express';
+
+// Every connection operation requires an authenticated actor; the service enforces participant permissions.
 import { connectionsController } from '../controllers/connections.controller';
 import { requireAuth } from '../middleware/auth';
 import { validate } from '../middleware/validate';

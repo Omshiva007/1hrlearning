@@ -1,3 +1,4 @@
+// Placeholder resource pages communicate intentionally unavailable admin modules without inventing behavior.
 'use client';
 
 import { useQuery } from '@tanstack/react-query';

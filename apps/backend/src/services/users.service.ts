@@ -29,6 +29,7 @@ const PUBLIC_USER_SELECT = {
 };
 
 function transformUser(user: { skills: { isTeaching: boolean; isLearning: boolean; [key: string]: unknown }[]; [key: string]: unknown }) {
+  // Expose role-specific skill lists while keeping the database relation shape internal.
   const { skills, ...rest } = user;
   return {
     ...rest,
@@ -71,6 +72,7 @@ export class UsersService {
   }
 
   async updateProfile(userId: string, input: UpdateProfileInput) {
+    // Preserve omitted fields; explicit empty or false values must still be written.
     const user = await prisma.user.update({
       where: { id: userId },
       data: {
@@ -87,12 +89,14 @@ export class UsersService {
     });
 
     const transformed = transformUser(user);
+    // Profile data is addressable by both identifiers, so both cache aliases must be invalidated.
     await cacheDel(`user:${userId}:profile`, `user:username:${user.username}`);
     return transformed;
   }
 
   async searchUsers(query: string, page: number, limit: number) {
     const skip = (page - 1) * limit;
+    // Fetch the page and count concurrently so pagination metadata describes the same filter contract.
     const [users, total] = await Promise.all([
       prisma.user.findMany({
         where: {
@@ -169,6 +173,7 @@ export class UsersService {
   }
 
   async deactivateAccount(userId: string) {
+    // Account deactivation is a soft delete so historical sessions and ledger records remain intact.
     await prisma.user.update({
       where: { id: userId },
       data: { isActive: false },

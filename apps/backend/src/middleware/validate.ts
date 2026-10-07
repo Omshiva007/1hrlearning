@@ -8,6 +8,7 @@ export function validate(schema: ZodSchema, target: ValidationTarget = 'body') {
   return (req: Request, _res: Response, next: NextFunction): void => {
     const result = schema.safeParse(req[target]);
     if (!result.success) {
+      // Group multiple Zod issues by field so clients can render all validation feedback together.
       const errors: Record<string, string[]> = {};
       for (const issue of result.error.issues) {
         const path = issue.path.join('.');
@@ -17,6 +18,7 @@ export function validate(schema: ZodSchema, target: ValidationTarget = 'body') {
       next(new AppError('Validation failed', 422, errors));
       return;
     }
+    // Downstream handlers receive normalized/coerced values, not the original untrusted payload.
     req[target] = result.data;
     next();
   };

@@ -1,3 +1,4 @@
+// Registration collects the minimum account profile and reports backend validation errors in-context.
 'use client';
 
 import { useState } from 'react';

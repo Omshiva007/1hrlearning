@@ -1,3 +1,4 @@
+// Protect point balances and ledger history on the server before passing credentials to the client view.
 import { redirect } from 'next/navigation';
 import { auth } from '@/lib/auth';
 import type { Metadata } from 'next';

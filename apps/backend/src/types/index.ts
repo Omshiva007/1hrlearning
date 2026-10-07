@@ -1,6 +1,8 @@
 import type { Request } from 'express';
 import type { User } from '@prisma/client';
 
+// Shared backend transport types carry trusted authentication context and structured application errors.
+
 export interface AuthenticatedRequest extends Request {
   user: Pick<User, 'id' | 'email' | 'role'>;
 }

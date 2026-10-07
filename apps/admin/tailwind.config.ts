@@ -1,3 +1,4 @@
+// Admin styling scans only this workspace and shares the product's semantic design tokens.
 import type { Config } from 'tailwindcss';
 
 const config: Config = {

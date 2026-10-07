@@ -1,3 +1,4 @@
+// Admin build behavior and cross-workspace package transpilation are centralized in this configuration.
 import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {

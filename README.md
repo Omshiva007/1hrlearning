@@ -215,6 +215,8 @@ After a session is confirmed, download an ICS calendar file from `GET /sessions/
 
 ## Contributing
 
+Before writing or reviewing code, follow the repository's [AI development baseline](docs/AI_DEVELOPMENT_BASELINE.md) and [development workflow](docs/DEVELOPMENT_WORKFLOW.md). The persistent agent entry point is [AGENTS.md](AGENTS.md).
+
 1. Fork the repository
 2. Create a feature branch (`git checkout -b feat/amazing-feature`)
 3. Commit your changes following [Conventional Commits](https://conventionalcommits.org)

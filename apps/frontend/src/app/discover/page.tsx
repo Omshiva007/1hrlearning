@@ -1,3 +1,4 @@
+// Discovery is authenticated so personalized exclusions and request actions have a trusted user identity.
 import { redirect } from 'next/navigation';
 import { auth } from '@/lib/auth';
 import type { Metadata } from 'next';

@@ -7,6 +7,7 @@ type RedisReply = boolean | number | string | (boolean | number | string)[];
 
 const makeStore = () =>
   new RedisStore({
+    // Adapt ioredis's variadic command API to the interface expected by rate-limit-redis.
     sendCommand: ((...args: string[]) =>
       redis.call(args[0], ...args.slice(1))) as unknown as (...args: string[]) => Promise<RedisReply>,
   });
@@ -16,6 +17,7 @@ export const globalRateLimit = rateLimit({
   max: 200,
   standardHeaders: true,
   legacyHeaders: false,
+  // Production instances share Redis counters; local development avoids requiring Redis for every request.
   store: config.isProd ? makeStore() : undefined,
   message: { success: false, message: 'Too many requests, please try again later.' },
 });

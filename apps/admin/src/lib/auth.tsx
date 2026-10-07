@@ -29,6 +29,7 @@ export function getStoredToken(): string | null {
 }
 
 export function setStoredToken(token: string): void {
+  // Middleware needs the cookie while client-side API calls read the same credential from local storage.
   localStorage.setItem(TOKEN_COOKIE, token);
   document.cookie = `${TOKEN_COOKIE}=${encodeURIComponent(token)}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax`;
 }
@@ -45,6 +46,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    // Hydrate browser-only credentials after mount to keep server rendering deterministic.
     const storedToken = getStoredToken();
     const storedUser = localStorage.getItem(USER_KEY);
     if (storedToken && storedUser) {
@@ -52,6 +54,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setToken(storedToken);
         setUser(JSON.parse(storedUser) as AuthUser);
       } catch {
+        // Corrupt persisted user data invalidates the paired token as one authentication unit.
         clearStoredToken();
       }
     }

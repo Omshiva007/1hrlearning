@@ -9,6 +9,7 @@ const BACKEND_URL = process.env.BACKEND_URL ?? 'http://localhost:4000';
 
 function tokenExpiry(accessToken: string): number {
   try {
+    // This timestamp only schedules refresh; backend signature verification remains the authorization boundary.
     const payload = JSON.parse(Buffer.from(accessToken.split('.')[1]!, 'base64url').toString()) as { exp?: number };
     return (payload.exp ?? 0) * 1000;
   } catch {
@@ -33,6 +34,7 @@ async function refreshBackendToken(token: Record<string, unknown>) {
       authError: undefined,
     };
   } catch {
+    // Remove the unusable access credential so the session cannot appear authenticated after refresh failure.
     return {
       ...token,
       accessToken: undefined,
@@ -48,6 +50,7 @@ export const authConfig: NextAuthConfig = {
         password: { label: 'Password', type: 'password' },
       },
       async authorize(credentials) {
+        // Validate credentials before forwarding them across the server-to-server trust boundary.
         const parsed = loginSchema.safeParse(credentials);
         if (!parsed.success) return null;
 
@@ -76,6 +79,7 @@ export const authConfig: NextAuthConfig = {
         }
       },
     }),
+    // Only register OAuth providers whose credentials are actually configured.
     ...(process.env.GOOGLE_CLIENT_ID
       ? [Google({ clientId: process.env.GOOGLE_CLIENT_ID, clientSecret: process.env.GOOGLE_CLIENT_SECRET })]
       : []),
@@ -93,6 +97,7 @@ export const authConfig: NextAuthConfig = {
         token.accessTokenExpires = tokenExpiry(token.accessToken);
         token.sub = user.id ?? token.sub;
       }
+      // Refresh slightly early to avoid an access token expiring during an in-flight request.
       if (token.accessToken && Date.now() < ((token.accessTokenExpires as number) - 30_000)) {
         return token;
       }

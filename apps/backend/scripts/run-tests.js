@@ -1,6 +1,8 @@
 const { readdirSync } = require('fs');
 const { spawnSync } = require('child_process');
 
+// Forward test-runner exit status so workspace automation sees the true test outcome.
+
 const base = 'src/__tests__';
 let files = [];
 

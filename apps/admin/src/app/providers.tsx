@@ -1,3 +1,4 @@
+// Compose authentication and query-cache providers once for every interactive admin route.
 'use client';
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';

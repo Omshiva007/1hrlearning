@@ -1,3 +1,4 @@
+// Protect session creation on the server before rendering the client-side scheduling workflow.
 import { redirect } from 'next/navigation';
 import { auth } from '@/lib/auth';
 import type { Metadata } from 'next';

@@ -1,3 +1,4 @@
+// Badge variants provide a consistent visual vocabulary for compact status and category labels.
 import * as React from 'react';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/utils';

@@ -1,6 +1,8 @@
 import { Router } from 'express';
 import { authController } from '../controllers/auth.controller';
 import { validate } from '../middleware/validate';
+
+// Authentication endpoints apply stricter throttling and schema validation before credential processing.
 import { requireAuth } from '../middleware/auth';
 import { authRateLimit } from '../middleware/rateLimit';
 import { registerSchema, loginSchema, refreshTokenSchema } from '@1hrlearning/shared';

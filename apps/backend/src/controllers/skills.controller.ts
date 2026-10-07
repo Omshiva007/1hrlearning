@@ -52,6 +52,7 @@ export const skillsController = {
 
   async addUserSkill(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
     try {
+      // Never trust a route user id over the authenticated identity for profile mutations.
       if (req.params.userId && req.params.userId !== req.user.id) {
         throw new AppError('Forbidden', 403);
       }
@@ -64,6 +65,7 @@ export const skillsController = {
 
   async updateUserSkill(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
     try {
+      // Skill ownership is enforced here before the service receives the mutation.
       if (req.params.userId !== req.user.id) {
         throw new AppError('Forbidden', 403);
       }

@@ -1,3 +1,4 @@
+// Mount session and query-cache providers once so client pages share authentication and server-state caches.
 'use client';
 
 import { SessionProvider } from 'next-auth/react';

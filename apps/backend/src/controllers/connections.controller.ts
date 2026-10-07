@@ -2,6 +2,8 @@ import type { Request, Response, NextFunction } from 'express';
 import type { AuthenticatedRequest } from '../types';
 import { connectionsService } from '../services/connections.service';
 
+// Connection authorization and state-transition rules remain in the service; this layer maps HTTP input/output.
+
 export const connectionsController = {
   async create(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
     try {

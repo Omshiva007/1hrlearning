@@ -1,5 +1,7 @@
 import { Router } from 'express';
 import type { Request, Response, NextFunction } from 'express';
+
+// Notification routes expose only the authenticated user's inbox and read-state mutations.
 import { notificationsController } from '../controllers/notifications.controller';
 import { requireAuth } from '../middleware/auth';
 import type { AuthenticatedRequest } from '../types';

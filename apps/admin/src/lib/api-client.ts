@@ -31,6 +31,7 @@ async function request<T>(
   });
 
   if (res.status === 401) {
+    // An unauthorized response invalidates the shared admin session and returns the operator to login.
     clearStoredToken();
     if (typeof window !== 'undefined') {
       window.location.href = '/login';
@@ -38,6 +39,7 @@ async function request<T>(
     throw new ApiError(401, 'Unauthorized');
   }
 
+  // Centralize response-envelope handling so admin hooks operate on domain values only.
   const data = (await res.json()) as ApiResponse<T>;
 
   if (!res.ok) {
@@ -94,6 +96,7 @@ export async function fetchPaginated<T>(
   const res = await fetch(url.toString(), { headers });
 
   if (res.status === 401) {
+    // Paginated requests follow the same fail-closed session behavior as ordinary requests.
     clearStoredToken();
     if (typeof window !== 'undefined') {
       window.location.href = '/login';
@@ -104,6 +107,7 @@ export async function fetchPaginated<T>(
   if (!res.ok) throw new ApiError(res.status, 'Request failed');
 
   const data = await res.json();
+  // Preserve the pagination contract when an endpoint returns an empty or legacy response.
   return {
     data: data.data ?? [],
     pagination: data.pagination ?? {

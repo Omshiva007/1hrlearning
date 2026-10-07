@@ -29,6 +29,7 @@ async function request<T>(
     headers,
   });
 
+  // All API endpoints share the same response envelope; unwrap it at this boundary for callers.
   const data = (await res.json()) as ApiResponse<T>;
 
   if (!res.ok) {
@@ -82,9 +83,11 @@ export async function fetchPaginated<T>(
   };
   if (token) headers['Authorization'] = `Bearer ${token}`;
 
+  // Public paginated reads may be reused briefly by Next.js to reduce repeated discovery traffic.
   const res = await fetch(url.toString(), { headers, next: { revalidate: 60 } });
   if (!res.ok) throw new ApiError(res.status, 'Request failed');
 
   const data = await res.json();
+  // Supply a complete empty-page contract when an older endpoint omits pagination metadata.
   return { data: data.data ?? [], pagination: data.pagination ?? { page: 1, limit: 20, total: 0, totalPages: 0, hasNext: false, hasPrev: false } };
 }

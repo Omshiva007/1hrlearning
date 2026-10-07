@@ -43,6 +43,7 @@ export function useAdminAuth() {
 
       const { accessToken, user: userData } = data.data;
 
+      // The backend remains authoritative, but the admin client also fails closed before persisting a session.
       if (userData.role !== 'ADMIN') {
         throw new ApiError(403, 'Access denied. Admin role required.');
       }
@@ -58,6 +59,7 @@ export function useAdminAuth() {
       login(accessToken, authUser);
       router.push('/dashboard');
     } catch (err: unknown) {
+      // Normalize network and API failures into one safe user-facing message.
       const message = err instanceof Error ? err.message : 'Login failed';
       setLoginError(message);
     } finally {

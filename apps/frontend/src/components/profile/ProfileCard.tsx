@@ -1,3 +1,4 @@
+// Profile cards summarize trust and skill signals before linking to the complete public profile.
 import Link from 'next/link';
 import type { PublicUser } from '@1hrlearning/shared';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';

@@ -1,3 +1,4 @@
+// Extend NextAuth's public session contract with backend identity and authorization fields.
 import type { DefaultSession } from 'next-auth';
 
 declare module 'next-auth' {

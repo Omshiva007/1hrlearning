@@ -1,3 +1,4 @@
+// Admin forms use this shared input contract for consistent focus, disabled, and error presentation.
 import * as React from 'react';
 import { cn } from '@/lib/utils';
 

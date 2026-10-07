@@ -1,3 +1,4 @@
+// Testimonials are static social proof; client rendering is used only for entrance animation.
 'use client';
 
 export function Testimonials() {

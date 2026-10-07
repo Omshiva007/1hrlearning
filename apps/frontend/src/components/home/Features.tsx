@@ -1,3 +1,4 @@
+// Feature cards summarize durable product capabilities and avoid coupling to authenticated runtime state.
 'use client';
 
 export function Features() {

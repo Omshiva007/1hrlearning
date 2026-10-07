@@ -1,3 +1,4 @@
+// Card primitives share layout semantics while allowing callers to compose only the regions they need.
 import * as React from 'react';
 import { cn } from '@/lib/utils';
 

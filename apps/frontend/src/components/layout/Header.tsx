@@ -1,3 +1,4 @@
+// The header switches public and authenticated navigation without duplicating session logic in pages.
 'use client';
 
 import Link from 'next/link';

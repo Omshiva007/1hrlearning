@@ -1,3 +1,4 @@
+// Avatar fallback behavior keeps identities recognizable when remote images are absent or fail to load.
 'use client';
 
 import * as React from 'react';

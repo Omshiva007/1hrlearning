@@ -24,6 +24,7 @@ export function createSocketServer(httpServer: HttpServer): SocketServer {
 
   io.use(async (socket: Socket, next) => {
     try {
+      // Browser clients use the auth payload; header fallback supports non-browser Socket.IO clients.
       const token =
         socket.handshake.auth.token ||
         socket.handshake.headers.authorization?.split(' ')[1];
@@ -38,6 +39,7 @@ export function createSocketServer(httpServer: HttpServer): SocketServer {
         select: { id: true, username: true, isActive: true },
       });
 
+      // JWT validity alone is insufficient because an account may have been deactivated after issuance.
       if (!user || !user.isActive) {
         return next(new Error('User not found'));
       }
@@ -56,6 +58,7 @@ export function createSocketServer(httpServer: HttpServer): SocketServer {
 
     logger.debug(`Socket connected: ${username} (${userId})`);
 
+    // A set supports multiple concurrent devices/tabs for the same authenticated user.
     await redis.sadd(userSocketKey(userId), socket.id);
     await redis.expire(userSocketKey(userId), 86400);
 
@@ -72,6 +75,7 @@ export function createSocketServer(httpServer: HttpServer): SocketServer {
 
     socket.on('session:message', async (data: { sessionId: string; message: string }) => {
       if (!data.sessionId || !data.message) return;
+      // Room membership is not authorization; re-check that the sender participates in the session.
       const session = await prisma.session.findFirst({
         where: {
           id: data.sessionId,

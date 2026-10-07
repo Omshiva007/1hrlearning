@@ -1,3 +1,4 @@
+// This client coordinates filters, pagination, and session actions over the authenticated discovery feed.
 'use client';
 
 import { useState } from 'react';

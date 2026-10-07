@@ -1,3 +1,4 @@
+// The navigation derives active state from the current path and keeps logout available across admin screens.
 'use client';
 
 import Link from 'next/link';

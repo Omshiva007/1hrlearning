@@ -12,6 +12,7 @@ const REFRESH_TOKEN_TTL_SECONDS = 7 * 24 * 60 * 60;
 
 export class AuthService {
   async register(input: RegisterInput) {
+    // Check both unique identities together so callers receive a stable domain error before the database constraint is reached.
     const existingUser = await prisma.user.findFirst({
       where: {
         OR: [{ email: input.email }, { username: input.username }],
@@ -27,6 +28,7 @@ export class AuthService {
 
     const passwordHash = await bcrypt.hash(input.password, PASSWORD.SALT_ROUNDS);
 
+    // The opening balance and its ledger entry are one invariant, so they must commit or roll back together.
     const user = await prisma.$transaction(async (tx) => {
       const newUser = await tx.user.create({
         data: {
@@ -63,6 +65,7 @@ export class AuthService {
       where: { email: input.email },
     });
 
+    // Use the same response for absent and inactive accounts to avoid leaking account state.
     if (!user || !user.isActive) {
       throw new AppError('Invalid credentials', 401);
     }
@@ -103,6 +106,7 @@ export class AuthService {
       throw new AppError('Account is inactive', 401);
     }
 
+    // Rotate refresh tokens after one use to limit replay of a captured token.
     await prisma.refreshToken.delete({ where: { id: storedToken.id } });
 
     return this._issueTokens(storedToken.user.id, storedToken.user.email, storedToken.user.role);
@@ -114,6 +118,7 @@ export class AuthService {
         where: { token: refreshToken, userId },
       });
     }
+    // Clear cached session state even when the client cannot provide its refresh token.
     await redis.del(`user:${userId}:sessions`);
   }
 

@@ -1,3 +1,4 @@
+// The admin login keeps privileged authentication isolated from the public user application.
 'use client';
 
 import { useState } from 'react';

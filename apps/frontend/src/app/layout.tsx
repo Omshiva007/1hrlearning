@@ -1,3 +1,4 @@
+// Root metadata, fonts, navigation, footer, and providers apply consistently to every public route.
 import type { Metadata } from 'next';
 import './globals.css';
 import { Providers } from './providers';

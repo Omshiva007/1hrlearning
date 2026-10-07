@@ -1,3 +1,4 @@
+// The final call to action sends visitors into the primary account-creation conversion path.
 'use client';
 
 import { Button } from '@/components/ui/button';

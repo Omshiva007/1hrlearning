@@ -1,3 +1,4 @@
+// Category administration derives current categories from skills and protects destructive operations explicitly.
 'use client';
 
 import Link from 'next/link';

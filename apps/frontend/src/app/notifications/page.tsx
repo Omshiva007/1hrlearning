@@ -1,3 +1,4 @@
+// Authenticate before exposing the user's private notification feed to the client component.
 import { redirect } from 'next/navigation';
 import { auth } from '@/lib/auth';
 import type { Metadata } from 'next';

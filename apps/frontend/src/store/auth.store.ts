@@ -1,3 +1,4 @@
+// This lightweight store holds optimistic user state; NextAuth remains the authoritative session source.
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { User } from '@1hrlearning/shared';

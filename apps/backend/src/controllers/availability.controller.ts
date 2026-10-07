@@ -2,6 +2,8 @@ import type { Response, NextFunction } from 'express';
 import type { AuthenticatedRequest } from '../types';
 import { availabilityService } from '../services/availability.service';
 
+// Availability mutations use the authenticated identity rather than accepting ownership from request data.
+
 export const availabilityController = {
   async getForUser(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
     try {

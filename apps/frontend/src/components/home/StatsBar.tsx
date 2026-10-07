@@ -1,3 +1,4 @@
+// Product statistics are presented as marketing indicators rather than live operational telemetry.
 'use client';
 
 export function StatsBar() {

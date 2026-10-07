@@ -2,6 +2,8 @@ import type { Request, Response, NextFunction } from 'express';
 import type { AuthenticatedRequest } from '../types';
 import { pointsService } from '../services/points.service';
 
+// Point responses are scoped to the authenticated account; balance mutations are intentionally service-controlled.
+
 export const pointsController = {
   async getBalance(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
     try {

@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+// Validate environment input once at startup so downstream modules consume a stable typed configuration.
+
 const configSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   PORT: z.coerce.number().default(4000),

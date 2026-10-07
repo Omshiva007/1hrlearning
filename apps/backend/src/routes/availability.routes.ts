@@ -1,5 +1,7 @@
 import { Router } from 'express';
 import type { Request, Response, NextFunction } from 'express';
+
+// Validation and authentication run before availability handlers reach user-owned scheduling data.
 import { requireAuth } from '../middleware/auth';
 import { validate } from '../middleware/validate';
 import { availabilityController } from '../controllers/availability.controller';

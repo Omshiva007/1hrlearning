@@ -51,6 +51,7 @@ export function useAddUserSkill(userId: string) {
     mutationFn: (input: AddUserSkillInput) =>
       api.post<UserSkill>(`/users/${userId}/skills`, input, accessToken),
     onSuccess: () => {
+      // The mutation changes both the skill collection and the derived current-user profile.
       void queryClient.invalidateQueries({ queryKey: ['users', userId, 'skills'] });
       void queryClient.invalidateQueries({ queryKey: ['user', 'me'] });
     },
@@ -65,6 +66,7 @@ export function useUpdateUserSkill(userId: string) {
     mutationFn: ({ skillId, input }: { skillId: string; input: UpdateUserSkillInput }) =>
       api.put<UserSkill>(`/users/${userId}/skills/${skillId}`, input, accessToken),
     onSuccess: () => {
+      // Refetch every representation containing the denormalized user-skill state.
       void queryClient.invalidateQueries({ queryKey: ['users', userId, 'skills'] });
       void queryClient.invalidateQueries({ queryKey: ['user', 'me'] });
     },
@@ -79,6 +81,7 @@ export function useRemoveUserSkill(userId: string) {
     mutationFn: (skillId: string) =>
       api.delete(`/users/${userId}/skills/${skillId}`, accessToken),
     onSuccess: () => {
+      // Removal affects both the list view and the current-user summary.
       void queryClient.invalidateQueries({ queryKey: ['users', userId, 'skills'] });
       void queryClient.invalidateQueries({ queryKey: ['user', 'me'] });
     },

@@ -1,3 +1,4 @@
+// Require a server session before handing the access token to the interactive session list.
 import { redirect } from 'next/navigation';
 import { auth } from '@/lib/auth';
 import type { Metadata } from 'next';

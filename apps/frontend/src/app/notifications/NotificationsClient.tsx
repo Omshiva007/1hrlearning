@@ -1,3 +1,4 @@
+// The client keeps read-state mutations synchronized with the cached authenticated notification feed.
 'use client';
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';

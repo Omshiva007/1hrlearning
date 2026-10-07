@@ -1,6 +1,8 @@
 import { PrismaClient } from '@prisma/client';
 import { logger } from './logger';
 
+// Reuse one client during development hot reloads to avoid exhausting database connections.
+
 const globalForPrisma = globalThis as unknown as { prisma: PrismaClient };
 
 export const prisma =

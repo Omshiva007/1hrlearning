@@ -1,5 +1,7 @@
 import { Router } from 'express';
 import type { Request, Response } from 'express';
+
+// Compose versioned route groups in one place so server mounting and API boundaries remain explicit.
 import authRoutes from './auth.routes';
 import usersRoutes from './users.routes';
 import skillsRoutes from './skills.routes';

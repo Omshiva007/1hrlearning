@@ -1,3 +1,4 @@
+// All protected admin routes share persistent navigation and the constrained workspace layout.
 import { AdminNav } from '@/components/AdminNav';
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {

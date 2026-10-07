@@ -15,6 +15,7 @@ export interface RefreshTokenPayload {
 }
 
 export function signAccessToken(payload: Omit<AccessTokenPayload, 'type'>): string {
+  // Stamp the token class into the signed payload so consumers can distinguish access and refresh credentials.
   return jwt.sign({ ...payload, type: 'access' }, config.jwt.secret, {
     expiresIn: config.jwt.expiresIn,
   } as jwt.SignOptions);
@@ -35,6 +36,7 @@ export function verifyRefreshToken(token: string): RefreshTokenPayload {
 }
 
 export function decodeToken<T>(token: string): T | null {
+  // Decoding is intentionally non-authoritative; callers needing trust must use a verify function above.
   try {
     return jwt.decode(token) as T;
   } catch {

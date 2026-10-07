@@ -5,6 +5,7 @@ import type { CreateSkillInput, AddUserSkillInput, UpdateUserSkillInput, SkillQu
 import { CACHE_TTL } from '@1hrlearning/shared';
 
 function slugify(text: string): string {
+  // Produce stable URL-safe identifiers from display names without retaining leading separators.
   return text
     .toLowerCase()
     .replace(/[^\w\s-]/g, '')
@@ -79,6 +80,7 @@ export class SkillsService {
       data: { ...input, slug },
     });
 
+    // Redis does not support deleting a wildcard directly; scan in bounded batches to avoid blocking the server.
     const keys: string[] = [];
     let cursor = '0';
     do {
@@ -109,6 +111,7 @@ export class SkillsService {
 
     const updated = await prisma.userSkill.update({
       where: { userId_skillId: { userId, skillId } },
+      // Omitted fields retain their current values, while explicit false/zero values remain valid updates.
       data: {
         ...(input.level !== undefined ? { level: input.level } : {}),
         ...(input.isTeaching !== undefined ? { isTeaching: input.isTeaching } : {}),
@@ -152,6 +155,7 @@ export class SkillsService {
       include: { skill: true },
     });
 
+    // userCount tracks distinct user-skill relations, not every upsert of an existing relation.
     if (!existing) {
       await prisma.skill.update({
         where: { id: input.skillId },
@@ -171,6 +175,7 @@ export class SkillsService {
 
     await prisma.userSkill.delete({ where: { userId_skillId: { userId, skillId } } });
 
+    // Keep the denormalized discovery count aligned after the relation is removed.
     await prisma.skill.update({
       where: { id: skillId },
       data: { userCount: { decrement: 1 } },

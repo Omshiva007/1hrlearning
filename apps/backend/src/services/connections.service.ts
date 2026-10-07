@@ -12,6 +12,7 @@ export class ConnectionsService {
     const addressee = await prisma.user.findUnique({ where: { id: input.addresseeId } });
     if (!addressee) throw new AppError('User not found', 404);
 
+    // Connections are direction-independent for duplicate detection, even though request ownership is directional.
     const existing = await prisma.connection.findFirst({
       where: {
         OR: [
@@ -52,6 +53,7 @@ export class ConnectionsService {
       throw new AppError('Access denied', 403);
     }
 
+    // A requester may reject or block through the shared state API, but cannot accept their own request.
     if (input.status === 'ACCEPTED' && connection.addresseeId !== userId) {
       throw new AppError('Only the recipient can accept connection requests', 403);
     }
@@ -75,6 +77,7 @@ export class ConnectionsService {
 
   async getConnections(userId: string, status?: string, page = 1, limit = 20) {
     const skip = (page - 1) * limit;
+    // Include both sides so a user's inbox and sent connections share one chronological feed.
     const where = {
       OR: [{ requesterId: userId }, { addresseeId: userId }],
       ...(status ? { status: status as 'PENDING' | 'ACCEPTED' | 'REJECTED' | 'BLOCKED' } : {}),

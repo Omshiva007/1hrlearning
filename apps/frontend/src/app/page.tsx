@@ -1,3 +1,4 @@
+// The public landing page composes stable marketing sections and their search metadata.
 import type { Metadata } from 'next';
 import { buildMetadata } from '@/lib/metadata';
 import { Navigation } from '@/components/layout/Navigation';

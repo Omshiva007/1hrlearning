@@ -1,3 +1,4 @@
+// Search crawlers may index public content but must stay out of authenticated and administrative routes.
 import type { MetadataRoute } from 'next';
 
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://1hrlearning.com';

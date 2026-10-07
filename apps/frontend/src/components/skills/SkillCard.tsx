@@ -1,3 +1,4 @@
+// Skill cards present discovery metadata and route users into the canonical skill detail workflow.
 import Link from 'next/link';
 import type { Skill } from '@1hrlearning/shared';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';

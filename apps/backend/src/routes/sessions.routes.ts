@@ -1,5 +1,7 @@
 import { Router } from 'express';
 import type { Request, Response, NextFunction } from 'express';
+
+// Session routes layer authentication and schema validation before stateful service operations.
 import { sessionsController } from '../controllers/sessions.controller';
 import { requireAuth } from '../middleware/auth';
 import { sendInterestSchema, sendSessionRequestSchema } from '@1hrlearning/shared';

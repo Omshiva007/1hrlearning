@@ -1,6 +1,8 @@
 import winston from 'winston';
 import { config } from '../config';
 
+// Logging format changes by environment while preserving one structured logger interface for callers.
+
 const { combine, timestamp, errors, json, colorize, simple } = winston.format;
 
 export const logger = winston.createLogger({

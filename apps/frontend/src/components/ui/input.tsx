@@ -1,3 +1,4 @@
+// Provide the shared input styling and ref contract used by accessible forms across the frontend.
 import * as React from 'react';
 import { cn } from '@/lib/utils';
 
