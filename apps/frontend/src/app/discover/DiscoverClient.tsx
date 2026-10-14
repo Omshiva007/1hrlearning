@@ -294,7 +294,8 @@ export function DiscoverClient({ token }: DiscoverClientProps) {
               <p className="text-lg mb-2">No open sessions right now</p>
               <p className="text-sm mb-4">Be the first to create a public session!</p>
               <Button asChild>
-                <a href="/sessions/new">Create Session →</a>
+                {/* Use client-side routing so this recovery action preserves the active application session. */}
+                <Link href="/sessions/new">Create Session →</Link>
               </Button>
             </div>
           )}

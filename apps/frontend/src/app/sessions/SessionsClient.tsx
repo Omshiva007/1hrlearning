@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { fetchPaginated, api } from '@/lib/api';
 import type { Session, SessionApplication } from '@1hrlearning/shared';
@@ -307,10 +308,11 @@ export function SessionsClient({ token }: SessionsClientProps) {
           <p className="text-sm mb-4">Create a session or discover open ones.</p>
           <div className="flex gap-3 justify-center">
             <Button asChild>
-              <a href="/sessions/new">Create Session</a>
+              {/* Empty-state actions stay within the authenticated client application. */}
+              <Link href="/sessions/new">Create Session</Link>
             </Button>
             <Button variant="outline" asChild>
-              <a href="/discover">Discover Sessions</a>
+              <Link href="/discover">Discover Sessions</Link>
             </Button>
           </div>
         </div>

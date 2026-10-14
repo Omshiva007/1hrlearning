@@ -1,5 +1,6 @@
 // Require a server session before handing the access token to the interactive session list.
 import { redirect } from 'next/navigation';
+import Link from 'next/link';
 import { auth } from '@/lib/auth';
 import type { Metadata } from 'next';
 import { SessionsClient } from './SessionsClient';
@@ -20,12 +21,13 @@ export default async function SessionsPage() {
           <h1 className="text-3xl font-bold">My Sessions</h1>
           <p className="text-muted-foreground">Manage your teaching and learning sessions.</p>
         </div>
-        <a
+        {/* Internal navigation should not trigger a full reload of the authenticated application shell. */}
+        <Link
           href="/sessions/new"
           className="inline-flex items-center gap-2 bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-md text-sm font-medium transition-colors"
         >
           + Create Session
-        </a>
+        </Link>
       </div>
       <SessionsClient token={session.accessToken as string} />
     </div>
