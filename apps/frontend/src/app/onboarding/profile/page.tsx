@@ -1,9 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
-import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -19,6 +18,22 @@ export default function OnboardingProfilePage() {
     bio: '',
     timezone: 'UTC',
   });
+
+  useEffect(() => {
+    if (!session?.user?.id || !session.accessToken) return;
+    // Reload persisted progress so refresh, back navigation, and re-login never discard completed work.
+    fetch(`/api/v1/users/${session.user.id}`, { headers: { Authorization: `Bearer ${session.accessToken}` } })
+      .then(async (response) => {
+        if (!response.ok) throw new Error('Unable to load your saved profile');
+        const payload = await response.json();
+        setFormData({
+          displayName: payload.data.displayName ?? '',
+          bio: payload.data.bio ?? '',
+          timezone: payload.data.timezone ?? 'UTC',
+        });
+      })
+      .catch((reason: unknown) => setError(reason instanceof Error ? reason.message : 'Unable to load your saved profile'));
+  }, [session?.accessToken, session?.user?.id]);
 
   if (status === 'unauthenticated') {
     return <div>Please log in first</div>;
@@ -167,11 +182,6 @@ export default function OnboardingProfilePage() {
 
           {/* Action buttons */}
           <div className="flex gap-3 pt-6">
-            <Link href="/dashboard">
-              <Button variant="outline" disabled={isLoading}>
-                Skip for now
-              </Button>
-            </Link>
             <Button
               type="submit"
               className="flex-1"

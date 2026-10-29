@@ -72,6 +72,10 @@ interface SeedUser {
   learnSkills: string[];
   pointsBalance: number;
   isDiscoverable: boolean;
+  averageRating: number;
+  ratingCount: number;
+  totalSessionsTaught: number;
+  totalSessionsLearned: number;
 }
 
 const SAMPLE_USERS: SeedUser[] = [
@@ -84,6 +88,7 @@ const SAMPLE_USERS: SeedUser[] = [
     learnSkills: ['Piano', 'Music Theory'],
     pointsBalance: 25,
     isDiscoverable: true,
+    averageRating: 4.8, ratingCount: 8, totalSessionsTaught: 12, totalSessionsLearned: 7,
   },
   {
     email: 'bob@example.com',
@@ -94,6 +99,7 @@ const SAMPLE_USERS: SeedUser[] = [
     learnSkills: ['React', 'JavaScript'],
     pointsBalance: 20,
     isDiscoverable: true,
+    averageRating: 4.7, ratingCount: 6, totalSessionsTaught: 9, totalSessionsLearned: 10,
   },
   {
     email: 'carol@example.com',
@@ -104,6 +110,7 @@ const SAMPLE_USERS: SeedUser[] = [
     learnSkills: ['Digital Marketing', 'SEO'],
     pointsBalance: 30,
     isDiscoverable: true,
+    averageRating: 4.9, ratingCount: 11, totalSessionsTaught: 18, totalSessionsLearned: 6,
   },
   {
     email: 'david@example.com',
@@ -114,6 +121,7 @@ const SAMPLE_USERS: SeedUser[] = [
     learnSkills: ['Spanish', 'Public Speaking'],
     pointsBalance: 15,
     isDiscoverable: true,
+    averageRating: 4.6, ratingCount: 5, totalSessionsTaught: 8, totalSessionsLearned: 5,
   },
   {
     email: 'emma@example.com',
@@ -124,8 +132,27 @@ const SAMPLE_USERS: SeedUser[] = [
     learnSkills: ['Project Management', 'SQL'],
     pointsBalance: 18,
     isDiscoverable: true,
+    averageRating: 4.8, ratingCount: 9, totalSessionsTaught: 14, totalSessionsLearned: 8,
+  },
+  {
+    email: 'privacy@example.com', username: 'private_pat', displayName: 'Private Pat',
+    bio: 'Acceptance fixture for privacy and discovery exclusion checks.',
+    teachSkills: ['Technical Writing'], learnSkills: ['Photography'], pointsBalance: 10,
+    isDiscoverable: false, averageRating: 0, ratingCount: 0, totalSessionsTaught: 0, totalSessionsLearned: 0,
+  },
+  {
+    email: 'zero@example.com', username: 'zero_balance', displayName: 'Zero Balance',
+    bio: 'Acceptance fixture for insufficient-points and recovery messaging.',
+    teachSkills: ['Photography'], learnSkills: ['Technical Writing'], pointsBalance: 0,
+    isDiscoverable: true, averageRating: 0, ratingCount: 0, totalSessionsTaught: 0, totalSessionsLearned: 0,
   },
 ];
+
+function stableFixtureNumber(seed: string, minimum: number, range: number): number {
+  // Stable character sums keep reruns and screenshots reproducible while retaining varied personas.
+  const hash = [...seed].reduce((total, character) => total + character.charCodeAt(0), 0);
+  return minimum + (hash % range);
+}
 
 async function main() {
   console.log('🌱 Starting database seed...');
@@ -212,12 +239,12 @@ async function main() {
     const samplePassword = await bcrypt.hash('Password123!', 12);
 
     for (const userData of SAMPLE_USERS) {
-      const existing = await prisma.user.findFirst({
+      let user = await prisma.user.findFirst({
         where: { OR: [{ email: userData.email }, { username: userData.username }] },
       });
 
-      if (!existing) {
-        const user = await prisma.user.create({
+      if (!user) {
+        user = await prisma.user.create({
           data: {
             email: userData.email,
             username: userData.username,
@@ -228,51 +255,16 @@ async function main() {
             isActive: true,
             isDiscoverable: userData.isDiscoverable,
             pointsBalance: userData.pointsBalance,
-            averageRating: 4.5 + Math.random() * 0.5,
-            ratingCount: Math.floor(Math.random() * 10) + 1,
-            totalSessionsTaught: Math.floor(Math.random() * 20),
-            totalSessionsLearned: Math.floor(Math.random() * 15),
+            averageRating: userData.averageRating,
+            ratingCount: userData.ratingCount,
+            totalSessionsTaught: userData.totalSessionsTaught,
+            totalSessionsLearned: userData.totalSessionsLearned,
             defaultMeetingProvider: 'ZOOM',
-            defaultMeetingUrl: `https://zoom.us/j/${String(Math.floor(Math.random() * 9_000_000_000) + 1_000_000_000)}`,
+            defaultMeetingUrl: `https://zoom.us/j/${String(stableFixtureNumber(userData.username, 1_000_000_000, 9_000_000_000))}`,
           },
         });
 
-        // Add teaching skills
-        for (const skillName of userData.teachSkills) {
-          if (skillMap[skillName]) {
-            await prisma.userSkill.upsert({
-              where: { userId_skillId: { userId: user.id, skillId: skillMap[skillName] } },
-              create: {
-                userId: user.id,
-                skillId: skillMap[skillName],
-                level: 'INTERMEDIATE',
-                isTeaching: true,
-                isLearning: false,
-                yearsOfExperience: Math.floor(Math.random() * 5) + 1,
-              },
-              update: { isTeaching: true },
-            });
-          }
-        }
-
-        // Add learning skills
-        for (const skillName of userData.learnSkills) {
-          if (skillMap[skillName]) {
-            await prisma.userSkill.upsert({
-              where: { userId_skillId: { userId: user.id, skillId: skillMap[skillName] } },
-              create: {
-                userId: user.id,
-                skillId: skillMap[skillName],
-                level: 'BEGINNER',
-                isTeaching: false,
-                isLearning: true,
-              },
-              update: { isLearning: true },
-            });
-          }
-        }
-
-        // Award initial points transaction
+        // The initial ledger entry is created with the user so balance and history cannot diverge on reruns.
         await prisma.pointTransaction.create({
           data: {
             userId: user.id,
@@ -285,40 +277,114 @@ async function main() {
 
         usersCreated++;
       }
+
+      // Upserts make a rerun repair missing persona skills without overwriting user-managed profile fields.
+      for (const skillName of userData.teachSkills) {
+        if (skillMap[skillName]) {
+          await prisma.userSkill.upsert({
+            where: { userId_skillId: { userId: user.id, skillId: skillMap[skillName] } },
+            create: {
+              userId: user.id,
+              skillId: skillMap[skillName],
+              level: 'INTERMEDIATE',
+              isTeaching: true,
+              isLearning: false,
+              yearsOfExperience: stableFixtureNumber(`${userData.username}:${skillName}`, 1, 5),
+            },
+            update: { isTeaching: true },
+          });
+        }
+      }
+
+      for (const skillName of userData.learnSkills) {
+        if (skillMap[skillName]) {
+          await prisma.userSkill.upsert({
+            where: { userId_skillId: { userId: user.id, skillId: skillMap[skillName] } },
+            create: {
+              userId: user.id,
+              skillId: skillMap[skillName],
+              level: 'BEGINNER',
+              isTeaching: false,
+              isLearning: true,
+            },
+            update: { isLearning: true },
+          });
+        }
+      }
+
+      const futureAvailability = await prisma.availability.findFirst({
+        where: { userId: user.id, status: 'OPEN', startTime: { gt: new Date() } },
+      });
+      if (!futureAvailability) {
+        const startTime = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000);
+        startTime.setMinutes(0, 0, 0);
+        await prisma.availability.create({
+          data: {
+            userId: user.id,
+            startTime,
+            endTime: new Date(startTime.getTime() + 60 * 60 * 1000),
+          },
+        });
+      }
+
+      // Seeded personas are acceptance-test actors; activate them only after all required
+      // teaching, learning, and future-availability records have been repaired above.
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { isOnboardingComplete: true },
+      });
     }
 
     if (usersCreated > 0) {
       console.log(`✅ Sample users created: ${usersCreated} (password: Password123!)`);
-
-      // Create a sample public session for discovery testing
-      const aliceUser = await prisma.user.findFirst({ where: { username: 'alice_dev' } });
-      const reactSkill = await prisma.skill.findFirst({ where: { name: 'React' } });
-
-      if (aliceUser && reactSkill) {
-        const existingSession = await prisma.session.findFirst({
-          where: { teacherId: aliceUser.id, isPublic: true },
-        });
-
-        if (!existingSession) {
-          await prisma.session.create({
-            data: {
-              teacherId: aliceUser.id,
-              skillId: reactSkill.id,
-              scheduledAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 1 week from now
-              durationMinutes: 60,
-              isPublic: true,
-              sessionType: 'TEACHING',
-              maxLearners: 1,
-              meetingUrl: 'https://zoom.us/j/10000000002',
-              notes: 'Intro to React hooks and state management. No prior React experience needed, just basic JavaScript.',
-              applicationDeadline: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
-            },
-          });
-          console.log('✅ Sample public session created for discovery testing');
-        }
-      }
     } else {
       console.log('ℹ️  Sample users already exist');
+    }
+
+    // Discovery data is independently repaired even when the users were created by an earlier seed run.
+    const aliceUser = await prisma.user.findFirst({ where: { username: 'alice_dev' } });
+    const reactSkill = await prisma.skill.findFirst({ where: { name: 'React' } });
+    if (aliceUser && reactSkill) {
+      const existingSession = await prisma.session.findFirst({
+        where: { teacherId: aliceUser.id, isPublic: true },
+      });
+      if (!existingSession) {
+        await prisma.session.create({
+          data: {
+            teacherId: aliceUser.id,
+            skillId: reactSkill.id,
+            scheduledAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+            durationMinutes: 60,
+            isPublic: true,
+            sessionType: 'TEACHING',
+            maxLearners: 1,
+            meetingUrl: 'https://zoom.us/j/10000000002',
+            notes: 'Intro to React hooks and state management. No prior React experience needed, just basic JavaScript.',
+            applicationDeadline: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
+            // A one-hour fixture costs two 30-minute point units and must never imply a free session.
+            pointsPerSession: 10,
+          },
+        });
+        console.log('✅ Sample public session created for discovery testing');
+      }
+      else if (existingSession.status === 'PENDING') {
+        const fixtureExpired = existingSession.scheduledAt <= new Date()
+          || !existingSession.applicationDeadline
+          || existingSession.applicationDeadline <= new Date();
+        if (fixtureExpired || existingSession.pointsPerSession !== 10) {
+          // Keep the reusable acceptance fixture actionable across seed runs instead of exposing an expired session.
+          await prisma.session.update({
+            where: { id: existingSession.id },
+            data: {
+              pointsPerSession: 10,
+              ...(fixtureExpired && {
+                scheduledAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+                applicationDeadline: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
+              }),
+            },
+          });
+        }
+      }
     }
   }
 

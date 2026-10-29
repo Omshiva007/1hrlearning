@@ -33,7 +33,7 @@ export function HeroSection() {
         <div className="mb-8 flex gap-3">
           <Button
             size="lg"
-            onClick={() => router.push('/auth/register')}
+            onClick={() => router.push('/register')}
             className="font-semibold"
           >
             Start learning free →
@@ -66,10 +66,7 @@ export function HeroSection() {
               DL
             </div>
           </div>
-          <span className="text-xs text-text-secondary">
-            <strong className="text-text-primary">2,400+ learners</strong> already exchanging
-            knowledge
-          </span>
+          <span className="text-xs text-text-secondary"><strong className="text-text-primary">Built for reciprocal learning</strong> with transparent matching</span>
         </div>
       </div>
 
@@ -86,14 +83,14 @@ export function HeroSection() {
 
           {/* Floating badge - Match score */}
           <div className="absolute right-6 top-6 rounded-lg border border-border bg-white p-3 shadow-md">
-            <div className="mb-1 text-xs text-text-secondary">Match score</div>
-            <div className="text-2xl font-bold text-green">94%</div>
+            <div className="mb-1 text-xs text-text-secondary">Matching</div>
+            <div className="text-sm font-bold text-green">Explainable</div>
           </div>
 
           {/* Floating badge - Sessions */}
           <div className="absolute bottom-6 left-6 rounded-lg border border-border bg-white p-3 shadow-md">
-            <div className="mb-1 text-xs text-text-secondary">Sessions this week</div>
-            <div className="text-2xl font-bold text-text-primary">128</div>
+            <div className="mb-1 text-xs text-text-secondary">Format</div>
+            <div className="text-sm font-bold text-text-primary">Live 1-to-1</div>
           </div>
         </div>
       </div>

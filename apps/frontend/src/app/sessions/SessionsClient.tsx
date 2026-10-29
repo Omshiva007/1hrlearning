@@ -183,7 +183,12 @@ function SessionCard({ session, token, userId }: { session: SessionWithRelations
       <CardContent className="space-y-3">
         <div className="text-xs text-muted-foreground space-y-1">
           <div>📅 {scheduledAt.toLocaleDateString()} at {scheduledAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
-          <div>⏱️ {session.durationMinutes} min · 💎 {session.pointsTransferred} pts</div>
+          <div>
+            ⏱️ {session.durationMinutes} min · 💎{' '}
+            {session.status === 'COMPLETED' || session.status === 'RATED'
+              ? `${session.pointsTransferred} pts settled`
+              : `${session.pointsPerSession} pts required`}
+          </div>
           {session.isPublic && !session.learnerId && <div>🔓 Open for applications</div>}
         </div>
 

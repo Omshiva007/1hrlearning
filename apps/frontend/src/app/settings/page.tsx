@@ -12,6 +12,7 @@ export const metadata: Metadata = {
 export default async function SettingsPage() {
   const session = await auth();
   if (!session) redirect('/login');
+  if (session.authError || !session.accessToken) redirect('/login?reason=session-expired');
 
   return (
     <div className="container mx-auto max-w-2xl px-4 py-8">

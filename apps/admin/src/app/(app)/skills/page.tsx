@@ -37,6 +37,8 @@ export default function SkillsPage() {
   const [editingSkill, setEditingSkill] = useState<Skill | null>(null);
   const [form, setForm] = useState<SkillForm>(DEFAULT_FORM);
   const [formError, setFormError] = useState('');
+  const [deleteCandidate, setDeleteCandidate] = useState<Skill | null>(null);
+  const [actionMessage, setActionMessage] = useState('');
 
   const { data, isLoading, error } = useAdminSkills({
     q: search || undefined,
@@ -118,11 +120,18 @@ export default function SkillsPage() {
   }
 
   async function handleDelete(skill: Skill) {
-    if (!confirm(`Delete skill "${skill.name}"? This cannot be undone.`)) return;
+    setDeleteCandidate(skill);
+  }
+
+  async function confirmDelete() {
+    if (!deleteCandidate) return;
+    setActionMessage('');
     try {
-      await deleteSkill.mutateAsync(skill.id);
+      await deleteSkill.mutateAsync(deleteCandidate.id);
+      setActionMessage(`Skill “${deleteCandidate.name}” deleted.`);
+      setDeleteCandidate(null);
     } catch (err: unknown) {
-      alert(err instanceof Error ? err.message : 'Failed to delete skill');
+      setActionMessage(err instanceof Error ? err.message : 'Failed to delete skill');
     }
   }
 
@@ -139,6 +148,9 @@ export default function SkillsPage() {
         </div>
         <Button onClick={openCreateForm}>+ Add Skill</Button>
       </div>
+
+      {actionMessage && <p role={actionMessage.includes('deleted') ? 'status' : 'alert'} className="mb-4 rounded border p-3 text-sm">{actionMessage}</p>}
+      {deleteCandidate && <div role="dialog" aria-labelledby="confirm-skill-delete" className="mb-6 rounded-lg border border-destructive bg-card p-4"><h2 id="confirm-skill-delete" className="font-semibold">Delete skill?</h2><p className="my-2 text-sm">Delete “{deleteCandidate.name}”? This cannot be undone.</p><div className="flex gap-2"><Button variant="destructive" onClick={() => void confirmDelete()} disabled={deleteSkill.isPending}>Delete</Button><Button variant="outline" onClick={() => setDeleteCandidate(null)}>Cancel</Button></div></div>}
 
       {/* Filters */}
       <div className="flex gap-3 mb-6 flex-wrap">

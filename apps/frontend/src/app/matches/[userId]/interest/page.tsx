@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Avatar } from '@/components/ui/avatar';
 import Link from 'next/link';
+import Image from 'next/image';
 
 interface Skill {
   id: string;
@@ -16,6 +17,7 @@ interface Skill {
 
 interface User {
   id: string;
+  username: string;
   displayName: string;
   avatarUrl?: string;
   bio?: string;
@@ -154,9 +156,12 @@ export default function SendInterestPage() {
     );
   }
 
+  // Public profile routes are username-based; fall back to discovery if profile loading failed.
+  const profileHref = sharer?.username ? `/profile/${sharer.username}` : '/discover';
+
   return (
     <div className="container mx-auto max-w-2xl px-4 py-8">
-      <Link href={`/profile/${sharer?.id}`} className="text-sm text-primary hover:underline mb-4 inline-block">
+      <Link href={profileHref} className="text-sm text-primary hover:underline mb-4 inline-block">
         ← Back to profile
       </Link>
 
@@ -178,7 +183,7 @@ export default function SendInterestPage() {
         {sharer && (
           <div className="bg-muted/50 rounded-lg p-4 mb-6 flex items-center gap-4">
             <Avatar className="w-12 h-12">
-              {sharer.avatarUrl && <img src={sharer.avatarUrl} alt={sharer.displayName} />}
+              {sharer.avatarUrl && <Image unoptimized src={sharer.avatarUrl} alt={sharer.displayName} fill sizes="64px" />}
             </Avatar>
             <div>
               <div className="font-semibold">{sharer.displayName}</div>
@@ -277,7 +282,7 @@ export default function SendInterestPage() {
 
           {/* Actions */}
           <div className="flex gap-3 pt-6">
-            <Link href={`/profile/${userId}`} className="flex-1">
+            <Link href={profileHref} className="flex-1">
               <Button variant="outline" className="w-full" disabled={isLoading}>
                 Cancel
               </Button>

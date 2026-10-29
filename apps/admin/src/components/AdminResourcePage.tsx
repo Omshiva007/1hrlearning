@@ -1,4 +1,4 @@
-// Placeholder resource pages communicate intentionally unavailable admin modules without inventing behavior.
+// Read-only operational resources share a consistent, accessible table while mutation-heavy pages use dedicated controls.
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
@@ -14,7 +14,18 @@ type Props = {
 
 function display(value: unknown): string {
   if (value === null || value === undefined) return '-';
-  if (typeof value === 'object') return JSON.stringify(value);
+  if (value instanceof Date) return value.toLocaleString();
+  if (Array.isArray(value)) return value.length === 0 ? '-' : value.map(display).join(', ');
+  if (typeof value === 'object') {
+    const record = value as Record<string, unknown>;
+    // Relations use their human label; operational tables should never force staff to decode a full object.
+    if (typeof record.displayName === 'string') return `${record.displayName}${record.username ? ` (@${record.username})` : ''}`;
+    if (typeof record.name === 'string') return record.name;
+    // Nested API metrics are flattened into readable labels instead of exposing implementation JSON.
+    return Object.entries(record)
+      .map(([key, nested]) => `${key.replace(/([A-Z])/g, ' $1')}: ${display(nested)}`)
+      .join(' · ');
+  }
   return String(value);
 }
 
@@ -34,7 +45,15 @@ export function AdminResourcePage({ title, description, endpoint }: Props) {
       : raw
         ? [raw]
         : [];
-  const keys = [...new Set(rows.flatMap((row) => Object.keys(row as Record<string, unknown>)))].slice(0, 10);
+  const allKeys = [...new Set(rows.flatMap((row) => Object.keys(row as Record<string, unknown>)))];
+  const relationKeys = new Set(['teacher', 'learner', 'skill']);
+  const keys = allKeys
+    // When a populated relation exists, hide its opaque foreign key in favor of the readable object.
+    .filter((key) => !(key.endsWith('Id') && relationKeys.has(key.slice(0, -2))))
+    .sort((a, b) => Number(relationKeys.has(b)) - Number(relationKeys.has(a)))
+    .slice(0, 12);
+
+  const heading = (key: string) => key.replace(/([A-Z])/g, ' $1').replace(/^./, (letter) => letter.toUpperCase());
 
   return (
     <div className="p-8">
@@ -48,7 +67,7 @@ export function AdminResourcePage({ title, description, endpoint }: Props) {
       {rows.length > 0 && (
         <div className="overflow-auto rounded-lg border bg-card">
           <table className="w-full text-sm">
-            <thead className="bg-muted/60"><tr>{keys.map((key) => <th key={key} className="px-4 py-3 text-left font-medium">{key}</th>)}</tr></thead>
+            <thead className="bg-muted/60"><tr>{keys.map((key) => <th key={key} className="px-4 py-3 text-left font-medium">{heading(key)}</th>)}</tr></thead>
             <tbody>{rows.map((row, index) => <tr key={String((row as Record<string, unknown>).id ?? index)} className="border-t">{keys.map((key) => <td key={key} className="max-w-xs truncate px-4 py-3">{display((row as Record<string, unknown>)[key])}</td>)}</tr>)}</tbody>
           </table>
         </div>

@@ -1,3 +1,3 @@
-// Advertising controls are intentionally represented by the shared not-yet-implemented resource shell.
-import { AdminResourcePage } from '@/components/AdminResourcePage';
-export default function Page() { return <AdminResourcePage title="Ads" description="Review first-party recommendation campaigns and placements." endpoint="/admin/ads?limit=100" />; }
+// First-party recommendations are isolated from private profile and session surfaces by backend placement rules.
+import { OperationalAdminPage } from '@/components/OperationalAdminPage';
+export default function Page() { return <OperationalAdminPage mode="ads" />; }

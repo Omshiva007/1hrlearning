@@ -17,6 +17,8 @@ export default function UsersPage() {
   const [search, setSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState('');
   const [page, setPage] = useState(1);
+  const [pendingAction, setPendingAction] = useState<{ user: AdminUser; role?: string; active?: boolean } | null>(null);
+  const [mutationMessage, setMutationMessage] = useState('');
 
   const { data, isLoading, error } = useAdminUsers({
     q: search || undefined,
@@ -39,23 +41,25 @@ export default function UsersPage() {
 
   async function handleRoleChange(user: AdminUser, newRole: string) {
     if (newRole === user.role) return;
-    if (!confirm(`Change ${user.username}'s role from ${user.role} to ${newRole}?`)) return;
+    // Stage privilege changes in-page so keyboard and screen-reader users receive the same confirmation context.
+    setPendingAction({ user, role: newRole });
+  }
+
+  async function applyPendingAction() {
+    if (!pendingAction) return;
+    setMutationMessage('');
     try {
-      await updateRole.mutateAsync({ id: user.id, role: newRole });
+      if (pendingAction.role) await updateRole.mutateAsync({ id: pendingAction.user.id, role: pendingAction.role });
+      else await updateStatus.mutateAsync({ id: pendingAction.user.id, isActive: Boolean(pendingAction.active) });
+      setMutationMessage('User change saved successfully.');
+      setPendingAction(null);
     } catch (err: unknown) {
-      alert(err instanceof Error ? err.message : 'Failed to update role');
+      setMutationMessage(err instanceof Error ? err.message : 'Failed to update user');
     }
   }
 
   async function handleStatusToggle(user: AdminUser) {
-    const action = user.isActive ? 'deactivate' : 'activate';
-    if (!confirm(`${action.charAt(0).toUpperCase() + action.slice(1)} user ${user.username}?`))
-      return;
-    try {
-      await updateStatus.mutateAsync({ id: user.id, isActive: !user.isActive });
-    } catch (err: unknown) {
-      alert(err instanceof Error ? err.message : 'Failed to update status');
-    }
+    setPendingAction({ user, active: !user.isActive });
   }
 
   return (
@@ -68,6 +72,9 @@ export default function UsersPage() {
           </p>
         </div>
       </div>
+
+      {mutationMessage && <p role={mutationMessage.includes('successfully') ? 'status' : 'alert'} className="mb-4 rounded border p-3 text-sm">{mutationMessage}</p>}
+      {pendingAction && <div role="dialog" aria-labelledby="confirm-user-action" className="mb-6 rounded-lg border bg-card p-4"><h2 id="confirm-user-action" className="font-semibold">Confirm user change</h2><p className="my-2 text-sm">{pendingAction.role ? `Change @${pendingAction.user.username} from ${pendingAction.user.role} to ${pendingAction.role}?` : `${pendingAction.active ? 'Activate' : 'Deactivate'} @${pendingAction.user.username}?`}</p><div className="flex gap-2"><Button onClick={() => void applyPendingAction()} disabled={updateRole.isPending || updateStatus.isPending}>Confirm</Button><Button variant="outline" onClick={() => setPendingAction(null)}>Cancel</Button></div></div>}
 
       {/* Filters */}
       <div className="flex gap-3 mb-6 flex-wrap">

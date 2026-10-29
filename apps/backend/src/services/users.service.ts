@@ -13,9 +13,10 @@ const PUBLIC_USER_SELECT = {
   timezone: true,
   isVerified: true,
   isDiscoverable: true,
+  isOnboardingComplete: true,
   defaultMeetingProvider: true,
-  defaultMeetingUrl: true,
   pointsBalance: true,
+  pointsLocked: true,
   totalSessionsTaught: true,
   totalSessionsLearned: true,
   averageRating: true,
@@ -72,6 +73,16 @@ export class UsersService {
   }
 
   async updateProfile(userId: string, input: UpdateProfileInput) {
+    if (input.isOnboardingComplete === true) {
+      const [teaching, learning, availability] = await Promise.all([
+        prisma.userSkill.count({ where: { userId, isTeaching: true } }),
+        prisma.userSkill.count({ where: { userId, isLearning: true } }),
+        prisma.availability.count({ where: { userId, status: 'OPEN', startTime: { gt: new Date() } } }),
+      ]);
+      // Completion is a server-owned milestone; clients cannot bypass any durable onboarding requirement.
+      const missing = [teaching === 0 && 'a teaching skill', learning === 0 && 'a learning skill', availability === 0 && 'future availability'].filter(Boolean);
+      if (missing.length > 0) throw new AppError(`Complete onboarding first: add ${missing.join(', ')}`, 422);
+    }
     // Preserve omitted fields; explicit empty or false values must still be written.
     const user = await prisma.user.update({
       where: { id: userId },
@@ -84,6 +95,7 @@ export class UsersService {
         ...(input.adEmailOptOut !== undefined ? { adEmailOptOut: input.adEmailOptOut } : {}),
         ...(input.defaultMeetingProvider !== undefined ? { defaultMeetingProvider: input.defaultMeetingProvider } : {}),
         ...(input.defaultMeetingUrl !== undefined ? { defaultMeetingUrl: input.defaultMeetingUrl } : {}),
+        ...(input.isOnboardingComplete === true ? { isOnboardingComplete: true } : {}),
       },
       select: { ...PUBLIC_USER_SELECT, adEmailOptOut: true },
     });

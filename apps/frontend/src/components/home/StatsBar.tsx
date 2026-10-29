@@ -1,12 +1,12 @@
-// Product statistics are presented as marketing indicators rather than live operational telemetry.
+// Product promises replace fabricated telemetry until a public metrics endpoint supplies verified values.
 'use client';
 
 export function StatsBar() {
   const stats = [
-    { value: '2,400+', label: 'Sessions completed' },
-    { value: '840', label: 'Active sharers' },
-    { value: '38', label: 'Topics covered' },
-    { value: '4.8★', label: 'Average rating' },
+    { value: 'Free', label: 'No payments between users' },
+    { value: '1-to-1', label: 'Focused live sessions' },
+    { value: 'Mutual', label: 'Teach and learn' },
+    { value: 'Private', label: 'Controlled profile visibility' },
   ];
 
   return (

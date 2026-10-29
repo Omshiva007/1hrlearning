@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { z } from 'zod/v3';
 import { SKILL_CATEGORIES, PASSWORD, USERNAME, RATING, SESSION, POINT_CONFIG_KEYS, PLATFORM_CONFIG_KEYS } from '../constants';
 
 // ─── Auth ────────────────────────────────────────────────────────────────────
@@ -202,12 +202,13 @@ export const sendSessionRequestSchema = z.object({
 });
 
 export const updateSessionSchema = z.object({
-  status: z.enum(['CONFIRMED', 'CANCELLED', 'IN_PROGRESS', 'COMPLETED', 'NO_SHOW', 'RATED']).optional(),
+  // RATED is derived after both participant ratings and is never a direct client transition.
+  status: z.enum(['CONFIRMED', 'CANCELLED', 'IN_PROGRESS', 'COMPLETED', 'NO_SHOW']).optional(),
   scheduledAt: z.string().datetime().optional(),
   meetingUrl: z.string().url().nullable().optional(),
   notes: z.string().max(1000).nullable().optional(),
   cancelReason: z.string().max(500).nullable().optional(),
-});
+}).refine((value) => Object.keys(value).length > 0, { message: 'At least one session change is required' });
 
 export const rateSessionSchema = z.object({
   score: z.number().int().min(RATING.MIN).max(RATING.MAX),
@@ -290,6 +291,21 @@ export const updatePlatformConfigSchema = z.object({
   reason: z.string().min(5).max(500),
 });
 
+export const updateEmailProviderConfigSchema = z.object({
+  provider: z.enum(['RESEND', 'SENDGRID', 'CONSOLE']),
+  fromEmail: z.string().email(),
+  fromName: z.string().trim().min(1).max(100).default('1hrLearning'),
+  // Omission preserves the stored credential, allowing safe provider switches without re-entering secrets.
+  apiKey: z.string().trim().min(10).max(500).optional(),
+  activate: z.boolean().default(true),
+  reason: z.string().trim().min(5).max(500),
+});
+
+export const testEmailProviderSchema = z.object({
+  provider: z.enum(['RESEND', 'SENDGRID', 'CONSOLE']).optional(),
+  recipient: z.string().email(),
+});
+
 // ─── Admin — Ads ──────────────────────────────────────────────────────────────
 
 export const createAdSchema = z.object({
@@ -367,6 +383,7 @@ export type AdminBanUserInput = z.infer<typeof adminBanUserSchema>;
 export type AdminPointAdjustInput = z.infer<typeof adminPointAdjustSchema>;
 export type UpdatePointConfigInput = z.infer<typeof updatePointConfigSchema>;
 export type UpdatePlatformConfigInput = z.infer<typeof updatePlatformConfigSchema>;
+export type UpdateEmailProviderConfigInput = z.infer<typeof updateEmailProviderConfigSchema>;
 export type CreateAdInput = z.infer<typeof createAdSchema>;
 export type UpdateAdInput = z.infer<typeof updateAdSchema>;
 export type AdminSessionOverrideInput = z.infer<typeof adminSessionOverrideSchema>;

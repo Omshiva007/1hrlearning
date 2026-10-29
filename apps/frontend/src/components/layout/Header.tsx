@@ -38,7 +38,7 @@ export function Header() {
               </Link>
               {user?.role === 'ADMIN' && (
                 <a
-                  href={process.env.NEXT_PUBLIC_ADMIN_URL ?? 'http://localhost:3001'}
+                  href={process.env.NEXT_PUBLIC_ADMIN_URL ?? 'http://localhost:3101'}
                   className="text-sm font-medium text-primary hover:text-primary/80 transition-colors"
                   target="_blank"
                   rel="noopener noreferrer"

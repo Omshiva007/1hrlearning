@@ -1,5 +1,6 @@
 const { readdirSync } = require('fs');
 const { spawnSync } = require('child_process');
+const path = require('path');
 
 // Forward test-runner exit status so workspace automation sees the true test outcome.
 
@@ -22,11 +23,16 @@ if (files.length === 0) {
 }
 
 for (const file of files) {
-  const command = process.platform === 'win32' ? 'npx.cmd' : 'npx';
-  const result = spawnSync(command, ['ts-node-dev', '--transpile-only', `${base}/${file}`], {
+  // Invoke the installed one-shot runner through Node so Windows never depends on .cmd shell behavior.
+  const tsNodeEntry = require.resolve('ts-node/dist/bin.js');
+  const result = spawnSync(process.execPath, [tsNodeEntry, '--transpile-only', path.join(base, file)], {
     stdio: 'inherit',
   });
 
+  if (result.error) {
+    console.error(`Unable to execute ${file}: ${result.error.message}`);
+    process.exit(1);
+  }
   if (result.status !== 0) {
     process.exit(result.status ?? 1);
   }

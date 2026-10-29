@@ -6,6 +6,7 @@ import GitHub from 'next-auth/providers/github';
 import { loginSchema } from '@1hrlearning/shared';
 
 const BACKEND_URL = process.env.BACKEND_URL ?? 'http://localhost:4000';
+const refreshRequests = new Map<string, Promise<Record<string, unknown>>>();
 
 function tokenExpiry(accessToken: string): number {
   try {
@@ -17,7 +18,7 @@ function tokenExpiry(accessToken: string): number {
   }
 }
 
-async function refreshBackendToken(token: Record<string, unknown>) {
+async function performBackendRefresh(token: Record<string, unknown>) {
   try {
     const response = await fetch(`${BACKEND_URL}/api/v1/auth/refresh`, {
       method: 'POST',
@@ -41,6 +42,19 @@ async function refreshBackendToken(token: Record<string, unknown>) {
       authError: 'RefreshAccessTokenError',
     };
   }
+}
+
+async function refreshBackendToken(token: Record<string, unknown>) {
+  const refreshToken = String(token.refreshToken ?? '');
+  if (!refreshToken) return { ...token, accessToken: undefined, authError: 'RefreshAccessTokenError' };
+
+  // Auth.js may evaluate the same encrypted session concurrently; share one rotation request so
+  // a second callback cannot replay the just-consumed refresh token and invalidate the browser.
+  const pending = refreshRequests.get(refreshToken);
+  if (pending) return pending;
+  const request = performBackendRefresh(token).finally(() => refreshRequests.delete(refreshToken));
+  refreshRequests.set(refreshToken, request);
+  return request;
 }
 export const authConfig: NextAuthConfig = {
   providers: [

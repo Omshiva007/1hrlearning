@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 
 interface TimeSlot {
+  id?: string;
   day: string;
   dayNumber: number;
   startTime: string;
@@ -25,6 +26,26 @@ export default function OnboardingAvailabilityPage() {
     { day: 'Monday', dayNumber: 1, startTime: '09:00', endTime: '17:00' },
   ]);
 
+  useEffect(() => {
+    if (!session?.accessToken) return;
+    fetch('/api/v1/availability/me', { headers: { Authorization: `Bearer ${session.accessToken}` } })
+      .then(async (response) => {
+        if (!response.ok) throw new Error('Unable to load your saved availability');
+        const payload = await response.json();
+        const saved = (payload.data ?? []).filter((slot: { status: string; startTime: string }) => slot.status === 'OPEN' && new Date(slot.startTime) > new Date());
+        if (saved.length > 0) {
+          // Persisted dates are projected back into editable day/time controls for a recoverable final step.
+          setSlots(saved.map((slot: { id: string; startTime: string; endTime: string }) => {
+            const start = new Date(slot.startTime);
+            const end = new Date(slot.endTime);
+            const time = (date: Date) => `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+            return { id: slot.id, day: DAYS[(start.getDay() + 6) % 7], dayNumber: start.getDay(), startTime: time(start), endTime: time(end) };
+          }));
+        }
+      })
+      .catch((reason: unknown) => setError(reason instanceof Error ? reason.message : 'Unable to load saved availability'));
+  }, [session?.accessToken]);
+
   if (status === 'unauthenticated') {
     return <div>Please log in first</div>;
   }
@@ -32,7 +53,7 @@ export default function OnboardingAvailabilityPage() {
   const handleAddSlot = () => {
     setSlots((prev) => [
       ...prev,
-      { day: DAYS[0], dayNumber: 0, startTime: '09:00', endTime: '17:00' },
+      { day: DAYS[0], dayNumber: 1, startTime: '09:00', endTime: '17:00' },
     ]);
   };
 
@@ -79,8 +100,8 @@ export default function OnboardingAvailabilityPage() {
         const [endHour, endMin] = slot.endTime.split(':').map(Number);
         endDate.setHours(endHour, endMin, 0, 0);
 
-        return fetch('/api/v1/availability', {
-          method: 'POST',
+        return fetch(slot.id ? `/api/v1/availability/${slot.id}` : '/api/v1/availability', {
+          method: slot.id ? 'PATCH' : 'POST',
           headers: {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${session?.accessToken}`,
@@ -249,11 +270,6 @@ export default function OnboardingAvailabilityPage() {
             <Link href="/onboarding/learn-side">
               <Button variant="outline" disabled={isLoading}>
                 Back
-              </Button>
-            </Link>
-            <Link href="/dashboard">
-              <Button variant="ghost" disabled={isLoading}>
-                Skip
               </Button>
             </Link>
             <Button

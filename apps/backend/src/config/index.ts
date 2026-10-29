@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { z } from 'zod/v3';
 
 // Validate environment input once at startup so downstream modules consume a stable typed configuration.
 
@@ -14,6 +14,7 @@ const configSchema = z.object({
   CORS_ORIGINS: z.string().default('http://localhost:3000'),
   SENDGRID_API_KEY: z.string().optional(),
   EMAIL_FROM: z.string().email().default('noreply@1hrlearning.com'),
+  EMAIL_CREDENTIAL_ENCRYPTION_KEY: z.string().regex(/^[a-fA-F0-9]{64}$/, 'Must be a 64-character hex key').optional(),
   SENTRY_DSN: z.string().optional(),
   APP_URL: z.string().url().default('http://localhost:3000'),
 });
@@ -46,6 +47,7 @@ export const config = {
   email: {
     sendgridApiKey: parsed.data.SENDGRID_API_KEY,
     from: parsed.data.EMAIL_FROM,
+    credentialEncryptionKey: parsed.data.EMAIL_CREDENTIAL_ENCRYPTION_KEY,
   },
   sentry: {
     dsn: parsed.data.SENTRY_DSN,

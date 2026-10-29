@@ -1,31 +1,22 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiClient } from '@/lib/api-client';
+import { apiClient, fetchPaginated } from '@/lib/api-client';
 import { useAuthContext } from '@/lib/auth';
-import type { Skill, PaginatedResponse, CreateSkillInput, UpdateSkillInput } from '@1hrlearning/shared';
+import type { Skill, CreateSkillInput, UpdateSkillInput } from '@1hrlearning/shared';
 
 export interface AdminStats {
-  stats: {
+  healthMetrics: {
     totalUsers: number;
-    totalSkills: number;
-    totalUserSkills: number;
-    totalSessions: number;
+    activeUsers7d: number;
+    activeRate7d: number;
+    totalSessionsCompleted: number;
+    sessionsToday: number;
+    noShowRate: number;
+    onboardingDropOff: number;
+    pointsInCirculation: number;
+    openFlags: number;
   };
-  categoryBreakdown: { category: string; count: number }[];
-  recentUsers: {
-    id: string;
-    username: string;
-    displayName: string;
-    email: string;
-    role: string;
-    createdAt: string;
-  }[];
-  recentSkills: {
-    id: string;
-    name: string;
-    category: string;
-    userCount: number;
-    createdAt: string;
-  }[];
+  topLearnerTopics: { skillId: string; name: string; _count: { userId: number } }[];
+  topSharerTopics: { skillId: string; name: string; _count: { userId: number } }[];
 }
 
 export interface AdminUser {
@@ -73,11 +64,7 @@ export function useAdminSkills(params?: {
       if (params?.category) searchParams.set('category', params.category);
       if (params?.page) searchParams.set('page', String(params.page));
       if (params?.limit) searchParams.set('limit', String(params.limit));
-      const qs = searchParams.toString();
-      return apiClient.get<PaginatedResponse<Skill>>(
-        `/admin/skills${qs ? `?${qs}` : ''}`,
-        token ?? undefined,
-      );
+      return fetchPaginated<Skill>('/admin/skills', Object.fromEntries(searchParams), token ?? undefined);
     },
     staleTime: 30 * 1000,
     enabled: !!token,
@@ -151,11 +138,7 @@ export function useAdminUsers(params?: {
       if (params?.role) searchParams.set('role', params.role);
       if (params?.page) searchParams.set('page', String(params.page));
       if (params?.limit) searchParams.set('limit', String(params.limit));
-      const qs = searchParams.toString();
-      return apiClient.get<{
-        data: AdminUser[];
-        pagination: PaginatedResponse<AdminUser>['pagination'];
-      }>(`/admin/users${qs ? `?${qs}` : ''}`, token ?? undefined);
+      return fetchPaginated<AdminUser>('/admin/users', Object.fromEntries(searchParams), token ?? undefined);
     },
     staleTime: 30 * 1000,
     enabled: !!token,

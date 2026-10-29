@@ -56,7 +56,8 @@ function MatchCard({ match, token }: { match: MatchScore; token: string }) {
             </div>
           </div>
           <div className="text-right shrink-0">
-            <div className="text-lg font-bold text-primary">{Math.round(match.score * 100)}%</div>
+            {/* The matching service already returns a normalized 0–100 score. */}
+            <div className="text-lg font-bold text-primary">{Math.max(0, Math.min(100, Math.round(match.fitmentScore)))}%</div>
             <div className="text-xs text-muted-foreground">match score</div>
           </div>
         </div>
@@ -102,8 +103,17 @@ function MatchCard({ match, token }: { match: MatchScore; token: string }) {
           </div>
         )}
 
-        <Button size="sm" variant="outline" className="w-full" asChild>
-          <a href={`/profile/${match.user.username}`}>View Profile</a>
+        <div className="grid grid-cols-2 gap-2">
+          <Button size="sm" variant="outline" asChild>
+            <Link href={`/profile/${match.user.username}`}>View Profile</Link>
+          </Button>
+          <Button size="sm" asChild>
+            {/* Use the immutable user id required by the private-session workflow. */}
+            <Link href={`/matches/${match.userId}/interest`}>Send Interest</Link>
+          </Button>
+        </div>
+        <Button size="sm" variant="secondary" className="w-full" asChild>
+          <Link href={`/matches/${match.userId}/request`}>Request a Session</Link>
         </Button>
       </CardContent>
     </Card>
@@ -252,7 +262,7 @@ export function DiscoverClient({ token }: DiscoverClientProps) {
             <div className="text-center py-12 text-muted-foreground">
               <p>Failed to load matches. Make sure you have skills listed in your profile.</p>
               <Button variant="outline" className="mt-4" asChild>
-                <Link href="/profile">Update Profile →</Link>
+                <Link href="/onboarding/profile">Update Profile →</Link>
               </Button>
             </div>
           )}
@@ -261,7 +271,7 @@ export function DiscoverClient({ token }: DiscoverClientProps) {
               <p className="text-lg mb-2">No matches yet</p>
               <p className="text-sm mb-4">Add teaching and learning skills to your profile to find matches.</p>
               <Button asChild>
-                <Link href="/profile">Update Skills →</Link>
+                <Link href="/onboarding/share-side">Update Skills →</Link>
               </Button>
             </div>
           )}

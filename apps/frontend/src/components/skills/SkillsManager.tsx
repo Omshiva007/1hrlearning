@@ -51,6 +51,7 @@ export function SkillsManager({ userId }: SkillsManagerProps) {
   const [form, setForm] = useState<SkillFormState>(DEFAULT_FORM);
   const [skillSearch, setSkillSearch] = useState('');
   const [error, setError] = useState('');
+  const [removeCandidate, setRemoveCandidate] = useState<UserSkill | null>(null);
 
   const { data: availableSkills } = useSkills({ q: skillSearch, limit: 20 });
 
@@ -119,10 +120,11 @@ export function SkillsManager({ userId }: SkillsManagerProps) {
     }
   }
 
-  async function handleRemove(skillId: string) {
-    if (!confirm('Remove this skill from your profile?')) return;
+  async function handleRemove() {
+    if (!removeCandidate) return;
     try {
-      await removeSkill.mutateAsync(skillId);
+      await removeSkill.mutateAsync(removeCandidate.skillId);
+      setRemoveCandidate(null);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Failed to remove skill';
       setError(message);
@@ -142,6 +144,7 @@ export function SkillsManager({ userId }: SkillsManagerProps) {
         )}
       </CardHeader>
       <CardContent className="space-y-4">
+        {removeCandidate && <div role="dialog" aria-labelledby="remove-skill-title" className="rounded-lg border border-destructive p-4"><h3 id="remove-skill-title" className="font-semibold">Remove {removeCandidate.skill.name}?</h3><p className="my-2 text-sm text-muted-foreground">This removes the skill from your teaching and learning profile.</p><div className="flex gap-2"><Button variant="destructive" size="sm" onClick={() => void handleRemove()} disabled={removeSkill.isPending}>Remove skill</Button><Button variant="outline" size="sm" onClick={() => setRemoveCandidate(null)}>Cancel</Button></div></div>}
         {/* Add / Edit Form */}
         {showForm && (
           <form onSubmit={(e) => void handleSubmit(e)} className="border rounded-lg p-4 space-y-4 bg-muted/30">
@@ -320,7 +323,7 @@ export function SkillsManager({ userId }: SkillsManagerProps) {
                     size="sm"
                     variant="ghost"
                     className="h-7 px-2 text-xs text-destructive hover:text-destructive"
-                    onClick={() => void handleRemove(us.skillId)}
+                    onClick={() => setRemoveCandidate(us)}
                     disabled={removeSkill.isPending}
                   >
                     Remove

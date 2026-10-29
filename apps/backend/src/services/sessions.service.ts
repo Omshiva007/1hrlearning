@@ -14,6 +14,7 @@ import { POINTS, POINT_CONFIG_KEYS } from '@1hrlearning/shared';
 import { notificationService } from './notification.service';
 import { pointsService, calcSessionPoints } from './points.service';
 import { emailService } from './email.service';
+import { assertSessionUpdateAllowed } from './session-transition';
 
 async function getPointConfig(key: string, fallback: number): Promise<number> {
   const config = await prisma.pointConfig.findUnique({ where: { key } });
@@ -21,18 +22,42 @@ async function getPointConfig(key: string, fallback: number): Promise<number> {
 }
 
 export class SessionsService {
+  async completeSessionAsAdmin(sessionId: string): Promise<boolean> {
+    const session = await prisma.session.findUnique({ where: { id: sessionId } });
+    if (!session?.learnerId) throw new AppError('Session with a learner not found', 404);
+    return this._handleCompletion(session.id, session.teacherId, session.learnerId, session.skillId, session.durationMinutes);
+  }
+
+  async cancelSessionAsAdmin(sessionId: string, reason: string): Promise<boolean> {
+    return prisma.$transaction(async (tx) => {
+      const session = await tx.session.findUnique({ where: { id: sessionId } });
+      if (!session) throw new AppError('Session not found', 404);
+      if (['COMPLETED', 'RATED', 'CANCELLED'].includes(session.status)) throw new AppError('Terminal session cannot be cancelled', 409);
+      const claimed = await tx.session.updateMany({
+        where: { id: sessionId, status: session.status },
+        data: { status: 'CANCELLED', cancelledAt: new Date(), cancelReason: reason },
+      });
+      if (claimed.count !== 1) return false;
+      if (session.learnerId && session.pointsLocked) await pointsService.releaseLockedPoints(session.learnerId, sessionId, tx);
+      if (session.availabilityId) await tx.availability.update({ where: { id: session.availabilityId }, data: { status: 'OPEN' } });
+      return true;
+    });
+  }
+
   // ── Interest (first interaction) ────────────────────────────────────────────
 
   async sendInterest(learnerId: string, input: SendInterestInput) {
-    const [sharer, skill, availability, learner] = await Promise.all([
+    const [sharer, skill, availability, learner, sharerSkill] = await Promise.all([
       prisma.user.findUnique({ where: { id: input.sharerId } }),
       prisma.skill.findUnique({ where: { id: input.skillId } }),
       prisma.availability.findUnique({ where: { id: input.availabilityId } }),
       prisma.user.findUnique({ where: { id: learnerId }, select: { displayName: true, pointsBalance: true } }),
+      prisma.userSkill.findFirst({ where: { userId: input.sharerId, skillId: input.skillId, isTeaching: true } }),
     ]);
 
     if (!sharer || sharer.isSuspended || sharer.isBanned) throw new AppError('Sharer not available', 404);
     if (!skill) throw new AppError('Skill not found', 404);
+    if (!sharerSkill) throw new AppError('The selected user does not teach this skill', 400);
     if (!availability || availability.userId !== input.sharerId) throw new AppError('Availability slot not found', 404);
     if (availability.status !== 'OPEN') throw new AppError('This slot is no longer available', 400);
     if (!learner) throw new AppError('User not found', 404);
@@ -44,8 +69,11 @@ export class SessionsService {
     }
 
     const defaultDuration = sharer.defaultSessionDuration ?? 60;
-    const session = await prisma.session.create({
-      data: {
+    const session = await prisma.$transaction(async (tx) => {
+      // Claim the open slot before creating the request so competing learners cannot both hold it.
+      const held = await tx.availability.updateMany({ where: { id: input.availabilityId, userId: input.sharerId, status: 'OPEN' }, data: { status: 'HELD' } });
+      if (held.count !== 1) throw new AppError('This slot is no longer available', 409);
+      return tx.session.create({ data: {
         teacherId: input.sharerId,
         learnerId,
         skillId: input.skillId,
@@ -59,12 +87,7 @@ export class SessionsService {
         pointsPerSession: calcSessionPoints(defaultDuration),
       },
       include: { skill: true, teacher: { select: { id: true, displayName: true } } },
-    });
-
-    // Hold the availability slot
-    await prisma.availability.update({
-      where: { id: input.availabilityId },
-      data: { status: 'HELD' },
+      });
     });
 
     await notificationService.create(input.sharerId, {
@@ -80,17 +103,19 @@ export class SessionsService {
   // ── Session Request (subsequent interaction) ─────────────────────────────────
 
   async sendSessionRequest(learnerId: string, input: SendSessionRequestInput) {
-    const [sharer, skill, availability, learner] = await Promise.all([
+    const [sharer, skill, availability, learner, sharerSkill] = await Promise.all([
       prisma.user.findUnique({ where: { id: input.sharerId } }),
       prisma.skill.findUnique({ where: { id: input.skillId } }),
       input.availabilityId
         ? prisma.availability.findUnique({ where: { id: input.availabilityId } })
         : Promise.resolve(null),
       prisma.user.findUnique({ where: { id: learnerId }, select: { displayName: true, pointsBalance: true } }),
+      prisma.userSkill.findFirst({ where: { userId: input.sharerId, skillId: input.skillId, isTeaching: true } }),
     ]);
 
     if (!sharer || sharer.isSuspended || sharer.isBanned) throw new AppError('Sharer not available', 404);
     if (!skill) throw new AppError('Skill not found', 404);
+    if (!sharerSkill) throw new AppError('The selected user does not teach this skill', 400);
     if (availability && availability.userId !== input.sharerId) throw new AppError('Availability slot not found', 404);
     if (availability && availability.status !== 'OPEN') throw new AppError('This slot is no longer available', 400);
     if (!learner) throw new AppError('User not found', 404);
@@ -103,8 +128,12 @@ export class SessionsService {
       throw new AppError(`You need ${pointsRequired} points for this session`, 400);
     }
 
-    const session = await prisma.session.create({
-      data: {
+    const session = await prisma.$transaction(async (tx) => {
+      if (input.availabilityId) {
+        const held = await tx.availability.updateMany({ where: { id: input.availabilityId, userId: input.sharerId, status: 'OPEN' }, data: { status: 'HELD' } });
+        if (held.count !== 1) throw new AppError('This slot is no longer available', 409);
+      }
+      return tx.session.create({ data: {
         teacherId: input.sharerId,
         learnerId,
         skillId: input.skillId,
@@ -118,14 +147,8 @@ export class SessionsService {
         pointsPerSession: pointsRequired,
       },
       include: { skill: true, teacher: { select: { id: true, displayName: true } } },
-    });
-
-    if (input.availabilityId) {
-      await prisma.availability.update({
-        where: { id: input.availabilityId },
-        data: { status: 'HELD' },
       });
-    }
+    });
 
     await notificationService.create(input.sharerId, {
       type: 'SESSION_REQUEST',
@@ -274,27 +297,25 @@ export class SessionsService {
     const isLearner = session.learnerId === userId;
     if (!isTeacher && !isLearner) throw new AppError('Access denied', 403);
 
-    if (input.status === 'CONFIRMED' && !isTeacher) {
-      throw new AppError('Only the sharer can confirm sessions', 403);
-    }
+    assertSessionUpdateAllowed({
+      currentStatus: session.status,
+      role: isTeacher ? 'teacher' : 'learner',
+      hasLearner: Boolean(session.learnerId),
+      input,
+    });
 
     const updateData: Record<string, unknown> = {};
 
     if (input.status === 'CONFIRMED') {
-      updateData.status = 'CONFIRMED';
-
-      // Lock points for learner on confirmation
-      if (session.learnerId) {
-        await pointsService.lockPoints(session.learnerId, sessionId, session.durationMinutes);
-      }
-
-      // Mark availability slot as BOOKED
-      if (session.availabilityId) {
-        await prisma.availability.update({
-          where: { id: session.availabilityId },
-          data: { status: 'BOOKED' },
-        });
-      }
+      await prisma.$transaction(async (tx) => {
+        // Claim PENDING before any economic effect; a concurrent confirmation then fails without a debit.
+        const claimed = await tx.session.updateMany({ where: { id: sessionId, status: 'PENDING' }, data: { status: 'CONFIRMED' } });
+        if (claimed.count !== 1) throw new AppError('Session is no longer pending', 409);
+        if (session.learnerId) await pointsService.lockPoints(session.learnerId, sessionId, session.durationMinutes, tx);
+        if (session.availabilityId) {
+          await tx.availability.update({ where: { id: session.availabilityId }, data: { status: 'BOOKED' } });
+        }
+      });
 
       // Notify both parties — meeting URL only revealed on confirm
       if (session.learnerId) {
@@ -325,20 +346,17 @@ export class SessionsService {
     }
 
     if (input.status === 'CANCELLED') {
-      updateData.status = 'CANCELLED';
-      updateData.cancelledAt = new Date();
-      updateData.cancelReason = input.cancelReason ?? null;
-
-      // Release locked points and free availability slot
-      if (session.learnerId && session.pointsLocked) {
-        await pointsService.releaseLockedPoints(session.learnerId, sessionId);
-      }
-      if (session.availabilityId) {
-        await prisma.availability.update({
-          where: { id: session.availabilityId },
-          data: { status: 'OPEN' },
+      await prisma.$transaction(async (tx) => {
+        const claimed = await tx.session.updateMany({
+          where: { id: sessionId, status: session.status },
+          data: { status: 'CANCELLED', cancelledAt: new Date(), cancelReason: input.cancelReason ?? null },
         });
-      }
+        if (claimed.count !== 1) throw new AppError('Session state changed; refresh and try again', 409);
+        if (session.learnerId && session.pointsLocked) await pointsService.releaseLockedPoints(session.learnerId, sessionId, tx);
+        if (session.availabilityId) {
+          await tx.availability.update({ where: { id: session.availabilityId }, data: { status: 'OPEN' } });
+        }
+      });
 
       const otherUserId = isTeacher ? session.learnerId : session.teacherId;
       if (otherUserId) {
@@ -353,7 +371,6 @@ export class SessionsService {
 
     if (input.status === 'NO_SHOW') {
       updateData.status = 'NO_SHOW';
-      if (!isTeacher) throw new AppError('Only the sharer can mark a session as no-show', 403);
       // No-show by learner — points forfeited, sharer gets credit
       if (session.learnerId) {
         await pointsService.applyLearnerNoShow(session.learnerId, session.teacherId, sessionId);
@@ -361,11 +378,11 @@ export class SessionsService {
     }
 
     if (input.status === 'COMPLETED') {
-      updateData.status = 'COMPLETED';
-      updateData.completedAt = new Date();
       if (session.learnerId) {
-        await this._handleCompletion(session.id, session.teacherId, session.learnerId, session.skillId, session.durationMinutes);
+        const completed = await this._handleCompletion(session.id, session.teacherId, session.learnerId, session.skillId, session.durationMinutes);
+        if (!completed) throw new AppError('Session was already completed or settled', 409);
       }
+      return prisma.session.findUnique({ where: { id: sessionId }, include: { skill: true } });
     }
 
     if (input.scheduledAt) updateData.scheduledAt = new Date(input.scheduledAt);
@@ -374,7 +391,6 @@ export class SessionsService {
 
     // Meeting URL update — only teacher can change it
     if (input.meetingUrl !== undefined) {
-      if (!isTeacher) throw new AppError('Only the sharer can update the meeting URL', 403);
       updateData.meetingUrl = input.meetingUrl;
     }
 
@@ -435,12 +451,7 @@ export class SessionsService {
       const endTime = new Date(session.scheduledAt.getTime() + session.durationMinutes * 60 * 1000);
       if (endTime < now && session.learnerId) {
         try {
-          await prisma.session.update({
-            where: { id: session.id },
-            data: { status: 'COMPLETED', completedAt: now },
-          });
-          await this._handleCompletion(session.id, session.teacherId, session.learnerId, session.skillId, session.durationMinutes);
-          completed++;
+          if (await this._handleCompletion(session.id, session.teacherId, session.learnerId, session.skillId, session.durationMinutes)) completed++;
         } catch {
           // Continue processing other sessions
         }
@@ -651,10 +662,7 @@ export class SessionsService {
   ) {
     const session = await prisma.session.findUnique({
       where: { id: sessionId },
-      include: {
-        skill: true,
-        teacher: { select: { displayName: true, email: true } },
-      },
+      include: { skill: true, teacher: { select: { displayName: true, email: true } } },
     });
     if (!session) throw new AppError('Session not found', 404);
     if (session.teacherId !== teacherId) throw new AppError('Access denied', 403);
@@ -663,27 +671,31 @@ export class SessionsService {
     if (!application || application.sessionId !== sessionId) throw new AppError('Application not found', 404);
     if (application.status !== 'PENDING') throw new AppError('Application already processed', 400);
 
-    const updated = await prisma.sessionApplication.update({
-      where: { id: applicationId },
-      data: { status: input.status },
-    });
-
     const teacher = await prisma.user.findUnique({ where: { id: teacherId }, select: { displayName: true } });
+    let updated;
 
     if (input.status === 'ACCEPTED') {
-      await prisma.session.update({
-        where: { id: sessionId },
-        data: { learnerId: application.applicantId, status: 'CONFIRMED', isPublic: false },
+      updated = await prisma.$transaction(async (tx) => {
+        // Claim the still-open session before locking points so concurrent acceptances cannot both win.
+        const claimed = await tx.session.updateMany({
+          where: { id: sessionId, teacherId, isPublic: true, status: 'PENDING', learnerId: null },
+          data: { learnerId: application.applicantId, status: 'CONFIRMED', isPublic: false },
+        });
+        if (claimed.count !== 1) throw new AppError('This public session has already been filled', 409);
+
+        await pointsService.lockPoints(application.applicantId, sessionId, session.durationMinutes, tx);
+        const accepted = await tx.sessionApplication.update({
+          where: { id: applicationId, sessionId, status: 'PENDING' },
+          data: { status: 'ACCEPTED' },
+        });
+        await tx.sessionApplication.updateMany({
+          where: { sessionId, id: { not: applicationId }, status: 'PENDING' },
+          data: { status: 'REJECTED' },
+        });
+        return accepted;
       });
 
-      // Lock learner points on acceptance
-      await pointsService.lockPoints(application.applicantId, sessionId, session.durationMinutes);
-
-      await prisma.sessionApplication.updateMany({
-        where: { sessionId, id: { not: applicationId }, status: 'PENDING' },
-        data: { status: 'REJECTED' },
-      });
-
+      // External notifications happen only after commit, so recipients never observe rolled-back state.
       await notificationService.create(application.applicantId, {
         type: 'SESSION_APPLICATION_ACCEPTED',
         title: 'Application Accepted!',
@@ -704,6 +716,10 @@ export class SessionsService {
         });
       }
     } else {
+      updated = await prisma.sessionApplication.update({
+        where: { id: applicationId, status: 'PENDING' },
+        data: { status: 'REJECTED' },
+      });
       await notificationService.create(application.applicantId, {
         type: 'SESSION_APPLICATION_REJECTED',
         title: 'Application Not Selected',
@@ -926,19 +942,31 @@ export class SessionsService {
     learnerId: string,
     skillId: string,
     durationMinutes: number,
-  ): Promise<void> {
+  ): Promise<boolean> {
     const [skill, learner, teacher] = await Promise.all([
       prisma.skill.findUnique({ where: { id: skillId }, select: { name: true } }),
       prisma.user.findUnique({ where: { id: learnerId }, select: { displayName: true, email: true } }),
       prisma.user.findUnique({ where: { id: teacherId }, select: { displayName: true, email: true } }),
     ]);
 
-    await Promise.all([
-      pointsService.transfer(learnerId, teacherId, sessionId, `${durationMinutes}-min session completion`),
-      prisma.user.update({ where: { id: teacherId }, data: { totalSessionsTaught: { increment: 1 }, lastPointActivityAt: new Date() } }),
-      prisma.user.update({ where: { id: learnerId }, data: { totalSessionsLearned: { increment: 1 } } }),
-      prisma.skill.update({ where: { id: skillId }, data: { sessionCount: { increment: 1 } } }),
-    ]);
+    const committed = await prisma.$transaction(async (tx) => {
+      // Completion claims the lifecycle state and settles every database effect in the same transaction.
+      const claimed = await tx.session.updateMany({
+        where: { id: sessionId, status: { in: ['CONFIRMED', 'IN_PROGRESS'] }, pointsTransferred: 0 },
+        data: { status: 'COMPLETED', completedAt: new Date() },
+      });
+      if (claimed.count !== 1) return false;
+      if (!await pointsService.transfer(learnerId, teacherId, sessionId, `${durationMinutes}-min session completion`, tx)) {
+        throw new AppError('Session points are not locked', 409);
+      }
+      await Promise.all([
+        tx.user.update({ where: { id: teacherId }, data: { totalSessionsTaught: { increment: 1 }, lastPointActivityAt: new Date() } }),
+        tx.user.update({ where: { id: learnerId }, data: { totalSessionsLearned: { increment: 1 } } }),
+        tx.skill.update({ where: { id: skillId }, data: { sessionCount: { increment: 1 } } }),
+      ]);
+      return true;
+    });
+    if (!committed) return false;
 
     const per30 = await getPointConfig(POINT_CONFIG_KEYS.PER_30_MIN, POINTS.PER_30_MIN);
     const earned = calcSessionPoints(durationMinutes, per30);
@@ -971,6 +999,7 @@ export class SessionsService {
 
     // Check if learner balance is low after spending
     await pointsService.checkAndNotifyLowBalance(learnerId);
+    return true;
   }
 }
 

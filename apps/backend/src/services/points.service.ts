@@ -4,6 +4,7 @@ import { POINTS, POINT_CONFIG_KEYS } from '@1hrlearning/shared';
 import type { PointTransactionType } from '@1hrlearning/shared';
 import { notificationService } from './notification.service';
 import { emailService } from './email.service';
+import type { Prisma } from '@prisma/client';
 
 /** Returns points for a given duration based on the 30-min=5-pts base rule (or configured rate). */
 export function calcSessionPoints(durationMinutes: number, pointsPer30Min: number = POINTS.PER_30_MIN): number {
@@ -11,8 +12,8 @@ export function calcSessionPoints(durationMinutes: number, pointsPer30Min: numbe
 }
 
 /** Load a point rule value from DB config, falling back to the hardcoded constant. */
-async function getConfigValue(key: string, fallback: number): Promise<number> {
-  const config = await prisma.pointConfig.findUnique({ where: { key } });
+async function getConfigValue(key: string, fallback: number, db: Prisma.TransactionClient | typeof prisma = prisma): Promise<number> {
+  const config = await db.pointConfig.findUnique({ where: { key } });
   return config ? config.value : fallback;
 }
 
@@ -53,11 +54,17 @@ export class PointsService {
   }
 
   /** Lock points for a learner when a session is confirmed. */
-  async lockPoints(learnerId: string, sessionId: string, durationMinutes: number): Promise<void> {
-    const per30Min = await getConfigValue(POINT_CONFIG_KEYS.PER_30_MIN, POINTS.PER_30_MIN);
-    const amount = calcSessionPoints(durationMinutes, per30Min);
+  async lockPoints(learnerId: string, sessionId: string, durationMinutes: number, transaction?: Prisma.TransactionClient): Promise<void> {
+    const execute = async (tx: Prisma.TransactionClient) => {
+      const per30Min = await getConfigValue(POINT_CONFIG_KEYS.PER_30_MIN, POINTS.PER_30_MIN, tx);
+      const amount = calcSessionPoints(durationMinutes, per30Min);
+      // Claim the unlocked session first; a concurrent retry cannot debit the learner twice.
+      const claimed = await tx.session.updateMany({
+        where: { id: sessionId, pointsLocked: false, pointsTransferred: 0 },
+        data: { pointsLocked: true, pointsLockedAt: new Date(), pointsPerSession: amount },
+      });
+      if (claimed.count !== 1) throw new AppError('Session points are already locked or settled', 409);
 
-    await prisma.$transaction(async (tx) => {
       const user = await tx.user.findUnique({
         where: { id: learnerId },
         select: { pointsBalance: true },
@@ -73,70 +80,55 @@ export class PointsService {
         },
       });
 
-      await tx.session.update({
-        where: { id: sessionId },
-        data: {
-          pointsLocked: true,
-          pointsLockedAt: new Date(),
-          pointsPerSession: amount,
-        },
-      });
-    });
+    };
+    if (transaction) return execute(transaction);
+    await prisma.$transaction(execute);
   }
 
   /** Release locked points back to learner (session declined or cancelled before completion). */
-  async releaseLockedPoints(learnerId: string, sessionId: string): Promise<void> {
-    const session = await prisma.session.findUnique({
-      where: { id: sessionId },
-      select: { pointsLocked: true, pointsPerSession: true },
-    });
-    if (!session?.pointsLocked) return;
-
-    await prisma.$transaction(async (tx) => {
-      await tx.user.update({
+  async releaseLockedPoints(learnerId: string, sessionId: string, transaction?: Prisma.TransactionClient): Promise<boolean> {
+    const execute = async (tx: Prisma.TransactionClient) => {
+      const session = await tx.session.findUnique({ where: { id: sessionId }, select: { pointsLocked: true, pointsPerSession: true } });
+      if (!session?.pointsLocked) return false;
+      const claimed = await tx.session.updateMany({ where: { id: sessionId, pointsLocked: true }, data: { pointsLocked: false } });
+      if (claimed.count !== 1) return false;
+      const updated = await tx.user.update({
         where: { id: learnerId },
         data: {
           pointsBalance: { increment: session.pointsPerSession },
           pointsLocked: { decrement: session.pointsPerSession },
         },
       });
-      await tx.session.update({
-        where: { id: sessionId },
-        data: { pointsLocked: false },
-      });
       await tx.pointTransaction.create({
         data: {
           userId: learnerId,
           type: 'REFUND',
           amount: session.pointsPerSession,
-          balanceAfter: 0, // will be recalculated
+          balanceAfter: updated.pointsBalance,
           description: 'Session cancelled — points returned',
           sessionId,
         },
       });
-    });
-
-    const updated = await prisma.user.findUnique({ where: { id: learnerId }, select: { pointsBalance: true } });
-    if (updated) {
-      await prisma.pointTransaction.updateMany({
-        where: { sessionId, type: 'REFUND' },
-        data: { balanceAfter: updated.pointsBalance },
-      });
-    }
+      return true;
+    };
+    if (transaction) return execute(transaction);
+    return prisma.$transaction(execute);
   }
 
   /** Transfer locked points from learner to sharer on session completion. */
-  async transfer(fromUserId: string, toUserId: string, sessionId: string, description: string): Promise<void> {
-    const session = await prisma.session.findUnique({
-      where: { id: sessionId },
-      select: { pointsPerSession: true, pointsLocked: true },
-    });
-    if (!session) throw new AppError('Session not found', 404);
+  async transfer(fromUserId: string, toUserId: string, sessionId: string, description: string, transaction?: Prisma.TransactionClient): Promise<boolean> {
+    const execute = async (tx: Prisma.TransactionClient) => {
+      const session = await tx.session.findUnique({ where: { id: sessionId }, select: { pointsPerSession: true, pointsLocked: true } });
+      if (!session) throw new AppError('Session not found', 404);
+      if (!session.pointsLocked) return false;
+      const amount = session.pointsPerSession;
+      const maxBalance = await getConfigValue(POINT_CONFIG_KEYS.MAX_BALANCE, POINTS.MAX_BALANCE, tx);
+      const claimed = await tx.session.updateMany({
+        where: { id: sessionId, pointsLocked: true, pointsTransferred: 0 },
+        data: { pointsLocked: false, pointsTransferred: amount },
+      });
+      if (claimed.count !== 1) return false;
 
-    const amount = session.pointsPerSession;
-    const maxBalance = await getConfigValue(POINT_CONFIG_KEYS.MAX_BALANCE, POINTS.MAX_BALANCE);
-
-    await prisma.$transaction(async (tx) => {
       // Deduct from locked pool (not from balance — already deducted on lock)
       const fromUser = await tx.user.findUnique({ where: { id: fromUserId }, select: { pointsLocked: true } });
       if (!fromUser) throw new AppError('User not found', 404);
@@ -187,14 +179,10 @@ export class PointsService {
         }),
       ]);
 
-      await tx.session.update({
-        where: { id: sessionId },
-        data: {
-          pointsLocked: false,
-          pointsTransferred: amount,
-        },
-      });
-    });
+      return true;
+    };
+    if (transaction) return execute(transaction);
+    return prisma.$transaction(execute);
   }
 
   /** Award rating bonus to sharer after learner submits a rating. */

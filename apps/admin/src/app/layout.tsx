@@ -1,10 +1,7 @@
 // Root metadata and providers apply uniformly to every administrative screen.
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
 import './globals.css';
 import { Providers } from './providers';
-
-const inter = Inter({ subsets: ['latin'], display: 'swap' });
 
 export const metadata: Metadata = {
   title: 'Admin | 1hrLearning',
@@ -15,7 +12,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={inter.className}>
+      <body>
         <Providers>{children}</Providers>
       </body>
     </html>

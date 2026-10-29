@@ -30,6 +30,7 @@ export default function RegisterPage() {
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
+  const [accountCreated, setAccountCreated] = useState(false);
 
   function update(field: string, value: string) {
     setForm((f) => ({ ...f, [field]: value }));
@@ -51,6 +52,7 @@ export default function RegisterPage() {
 
     try {
       await api.post('/auth/register', parsed.data);
+      setAccountCreated(true);
       const signInResult = await signIn('credentials', {
         email: parsed.data.email,
         password: parsed.data.password,
@@ -66,7 +68,8 @@ export default function RegisterPage() {
         return;
       }
 
-      router.push('/dashboard');
+      // New accounts must finish the durable activation flow before entering the normal product.
+      router.push('/onboarding/profile');
     } catch (error) {
       if (error instanceof ApiError) {
         if (error.errors) {
@@ -108,6 +111,11 @@ export default function RegisterPage() {
             >
               {errors._root}
             </div>
+          )}
+          {accountCreated && errors._root && (
+            <p className="text-sm text-center">
+              <Link href="/login" className="text-primary hover:underline">Continue to manual sign-in</Link>
+            </p>
           )}
 
           {[

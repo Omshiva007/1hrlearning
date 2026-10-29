@@ -1,7 +1,13 @@
 // Frontend build behavior, image policy, and shared-package transpilation live in this configuration.
 import type { NextConfig } from 'next';
 
+const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? (process.env.NODE_ENV === 'development' ? 'http://localhost:4000/api/v1' : undefined);
+if (!apiUrl) throw new Error('NEXT_PUBLIC_API_URL is required for production builds');
+
 const nextConfig: NextConfig = {
+  // Development and production commands may run during the same acceptance session; separate
+  // artifacts so `next build` cannot invalidate chunks served by `next dev`.
+  distDir: process.env.NODE_ENV === 'development' ? '.next-dev' : '.next',
   experimental: {
     optimizePackageImports: ['lucide-react', '@radix-ui/react-avatar'],
   },
@@ -33,18 +39,18 @@ const nextConfig: NextConfig = {
     return [
       {
         source: '/api/v1/:path*',
-        destination: `${process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000/api/v1'}/:path*`,
+        destination: `${apiUrl}/:path*`,
       },
       {
         source: '/api/backend/:path*',
-        destination: `${process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000/api/v1'}/:path*`,
+        destination: `${apiUrl}/:path*`,
       },
     ];
   },
   async redirects() {
     return [
-      { source: '/onboarding', destination: '/profile', permanent: false },
-      { source: '/onboarding/:path*', destination: '/:path*', permanent: false },
+      // Keep every onboarding step inside its guarded route group; only the bare entry needs a canonical step.
+      { source: '/onboarding', destination: '/onboarding/profile', permanent: false },
       { source: '/auth/login', destination: '/login', permanent: false },
       { source: '/auth/register', destination: '/register', permanent: false },
     ];

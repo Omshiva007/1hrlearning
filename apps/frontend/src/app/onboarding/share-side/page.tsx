@@ -27,16 +27,18 @@ export default function OnboardingShareSidePage() {
   useEffect(() => {
     const fetchSkills = async () => {
       try {
-        const response = await fetch('/api/v1/skills', {
+        const [response, profileResponse] = await Promise.all([fetch('/api/v1/skills', {
           headers: {
             Authorization: `Bearer ${session?.accessToken}`,
           },
-        });
+        }), fetch(`/api/v1/users/${session?.user?.id}`, { headers: { Authorization: `Bearer ${session?.accessToken}` } })]);
 
-        if (!response.ok) throw new Error('Failed to fetch skills');
+        if (!response.ok || !profileResponse.ok) throw new Error('Failed to load saved teaching skills');
 
         const data = await response.json();
+        const profile = await profileResponse.json();
         setSkills(data.data || []);
+        setSelectedSkills((profile.data?.teachingSkills ?? []).map((entry: { skillId: string }) => entry.skillId));
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load skills');
       } finally {
@@ -47,7 +49,7 @@ export default function OnboardingShareSidePage() {
     if (session?.accessToken) {
       fetchSkills();
     }
-  }, [session?.accessToken]);
+  }, [session?.accessToken, session?.user?.id]);
 
   if (status === 'unauthenticated') {
     return <div>Please log in first</div>;
@@ -90,8 +92,9 @@ export default function OnboardingShareSidePage() {
       );
 
       const responses = await Promise.all(promises);
-      if (!responses.every((r) => r.ok)) {
-        throw new Error('Failed to save skills');
+      const failed = responses.map((response, index) => response.ok ? null : skills.find((skill) => skill.id === selectedSkills[index])?.name).filter(Boolean);
+      if (failed.length > 0) {
+        throw new Error(`Could not save: ${failed.join(', ')}. Your other selections were saved; retry to continue.`);
       }
 
       // Move to next step

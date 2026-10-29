@@ -1,41 +1,25 @@
-// Testimonials are static social proof; client rendering is used only for entrance animation.
+// These are verifiable product capabilities, not invented testimonials or ratings.
 'use client';
 
 export function Testimonials() {
   const testimonials = [
     {
-      quote:
-        '"Got more clarity on double-entry accounting in 45 minutes than from 3 hours of YouTube videos."',
-      author: 'Arjun R.',
-      role: 'Learned: Accounting basics',
-      avatar: 'AR',
+      quote: 'Declare what you can teach and what you want to learn.', author: 'Reciprocal profiles', role: 'Matching starts with real skills', avatar: '01',
       bg: 'bg-green-light',
       color: 'text-green-dark',
     },
     {
-      quote:
-        '"I taught Python and earned enough points to learn personal finance. The exchange model just works."',
-      author: 'Sana M.',
-      role: 'Shared: Python · Learned: Finance',
-      avatar: 'SM',
+      quote: 'Teach to earn points, then use those points to learn.', author: 'No-money exchange', role: 'A closed learning economy', avatar: '02',
       bg: 'bg-purple-light',
       color: 'text-purple-dark',
     },
     {
-      quote:
-        '"The person who helped with my resume had real HR experience. It felt like a mentor, not a tutorial."',
-      author: 'Priya K.',
-      role: 'Learned: Resume writing',
-      avatar: 'PK',
+      quote: 'See why a person matches before sending a request.', author: 'Explainable discovery', role: 'Skills, availability, and reputation', avatar: '03',
       bg: 'bg-amber-light',
       color: 'text-amber',
     },
     {
-      quote:
-        '"Never thought I had anything worth teaching. Turns out people really wanted to learn Excel from me."',
-      author: 'Daniel L.',
-      role: 'Shared: Excel',
-      avatar: 'DL',
+      quote: 'Meeting links stay private until a session is confirmed.', author: 'Participant privacy', role: 'Details shared at the right time', avatar: '04',
       bg: 'bg-coral-light',
       color: 'text-coral-dark',
     },
@@ -45,13 +29,13 @@ export function Testimonials() {
     <section className="px-10 py-16">
       <div className="mb-8">
         <p className="mb-2 text-xs font-bold uppercase tracking-wider text-green-deep">
-          Social proof
+          Product principles
         </p>
         <h2 className="mb-3 font-serif text-4xl font-bold text-text-primary">
-          What people are saying
+          Designed for trustworthy exchange
         </h2>
         <p className="max-w-lg text-base text-text-secondary">
-          Real sessions. Real people. Real learning.
+          The platform makes every promise below enforceable in the workflow.
         </p>
       </div>
 
@@ -61,7 +45,6 @@ export function Testimonials() {
             key={idx}
             className="rounded-2xl border border-border bg-white p-5 shadow-sm"
           >
-            <div className="mb-3 text-sm">★★★★★</div>
             <p className="mb-4 font-serif text-sm italic text-text-primary">
               {testimonial.quote}
             </p>

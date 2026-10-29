@@ -126,5 +126,5 @@ jobs:
           NODE_ENV: test
         run: |
           cd apps/backend
-          npx prisma migrate deploy 2>/dev/null || true
-          npm test 2>/dev/null || echo "No tests configured yet"
+          npx prisma migrate deploy
+          npm test

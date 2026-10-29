@@ -8,6 +8,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { getInitials, formatDate } from '@/lib/utils';
 import { auth } from '@/lib/auth';
 import { SkillsManager } from '@/components/skills/SkillsManager';
+import { Button } from '@/components/ui/button';
+import Link from 'next/link';
 import type { PublicUser } from '@1hrlearning/shared';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000/api/v1';
@@ -74,6 +76,13 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
                   )}
                   <span>📅 Joined {formatDate(user.createdAt)}</span>
                 </div>
+                {session && !isOwnProfile && (
+                  <div className="mt-5 flex flex-wrap gap-2">
+                    {/* Public profiles are a key conversion surface, so private-session actions stay reachable here. */}
+                    <Button asChild><Link href={`/matches/${user.id}/interest`}>Send Interest</Link></Button>
+                    <Button variant="outline" asChild><Link href={`/matches/${user.id}/request`}>Request a Session</Link></Button>
+                  </div>
+                )}
               </div>
             </div>
           </CardContent>

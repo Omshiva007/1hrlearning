@@ -1,10 +1,6 @@
-import sgMail from '@sendgrid/mail';
 import { config } from '../config';
 import { logger } from '../utils/logger';
-
-if (config.email.sendgridApiKey) {
-  sgMail.setApiKey(config.email.sendgridApiKey);
-}
+import { emailProviderService } from './email-provider.service';
 
 function htmlEncode(str: string): string {
   // All user-controlled values interpolated into HTML email bodies must pass through this encoder.
@@ -16,24 +12,15 @@ function htmlEncode(str: string): string {
 }
 
 export class EmailService {
-  private async send(to: string, subject: string, html: string): Promise<void> {
-    // Local environments intentionally degrade to logging when no provider credential is configured.
-    if (!config.email.sendgridApiKey) {
-      logger.debug(`[Email] Would send to ${to}: ${subject}`);
-      return;
-    }
-
+  async send(to: string, subject: string, html: string): Promise<boolean> {
     try {
-      await sgMail.send({
-        to,
-        from: config.email.from,
-        subject,
-        html,
-      });
+      await emailProviderService.send({ to, subject, html });
       logger.info(`Email sent to ${to}: ${subject}`);
+      return true;
     } catch (error) {
-      // Email is a side effect; provider failure is logged without failing the already-completed business action.
+      // Business transactions remain committed when a non-critical notification provider is unavailable.
       logger.error('Failed to send email:', error);
+      return false;
     }
   }
 
@@ -92,8 +79,8 @@ export class EmailService {
     );
   }
 
-  async sendOnboardingReminder(to: string, displayName: string, completionUrl: string): Promise<void> {
-    await this.send(
+  async sendOnboardingReminder(to: string, displayName: string, completionUrl: string): Promise<boolean> {
+    return this.send(
       to,
       'Complete Your 1hrLearning Profile',
       `<h1>Welcome, ${htmlEncode(displayName)}!</h1>
@@ -154,8 +141,8 @@ export class EmailService {
     );
   }
 
-  async sendPointsExpiryWarning(to: string, displayName: string, expiringPoints: number, expiryDate: Date): Promise<void> {
-    await this.send(
+  async sendPointsExpiryWarning(to: string, displayName: string, expiringPoints: number, expiryDate: Date): Promise<boolean> {
+    return this.send(
       to,
       'Your 1hrLearning Points Will Expire Soon',
       `<h1>Points Expiry Notice</h1>
@@ -201,8 +188,8 @@ export class EmailService {
     );
   }
 
-  async sendReEngagementEmail(to: string, displayName: string, daysSinceActive: number, reengagementUrl: string): Promise<void> {
-    await this.send(
+  async sendReEngagementEmail(to: string, displayName: string, daysSinceActive: number, reengagementUrl: string): Promise<boolean> {
+    return this.send(
       to,
       'We Miss You! Come Back to 1hrLearning',
       `<h1>We'd Love to See You Again!</h1>

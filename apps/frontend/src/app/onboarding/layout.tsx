@@ -14,6 +14,7 @@ export default async function OnboardingLayout({
 }) {
   const session = await auth();
   if (!session) redirect('/login');
+  if (session.authError || !session.accessToken) redirect('/login?reason=session-expired');
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex flex-col">

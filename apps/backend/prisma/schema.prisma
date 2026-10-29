@@ -427,6 +427,21 @@ model SavedMeetingLink {
   @@index([userId])
 }
 
+// Provider credentials are encrypted by the application; plaintext secrets never enter audit logs or API responses.
+model EmailProviderConfig {
+  provider          String   @id
+  fromEmail         String
+  fromName          String   @default("1hrLearning")
+  encryptedApiKey   String?
+  credentialHint    String?
+  isActive          Boolean  @default(false)
+  updatedById       String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([isActive])
+}
+
 // ─── Points ───────────────────────────────────────────────────────────────────
 
 model PointTransaction {
@@ -445,6 +460,8 @@ model PointTransaction {
   @@index([userId])
   @@index([sessionId])
   @@index([createdAt])
+  // Session-backed ledger effects are unique per user and type, making retries database-idempotent.
+  @@unique([userId, type, sessionId])
 }
 
 model PointConfig {

@@ -15,6 +15,8 @@ import {
   updateAdSchema,
   adminSessionOverrideSchema,
   resolveFlagSchema,
+  updateEmailProviderConfigSchema,
+  testEmailProviderSchema,
 } from '@1hrlearning/shared';
 import type { AuthenticatedRequest } from '../types';
 
@@ -116,6 +118,15 @@ router.get('/config', adminOnly, (req, res, next) =>
 );
 router.patch('/config', adminOnly, validate(updatePlatformConfigSchema), (req, res, next) =>
   adminController.updatePlatformConfig(req as AuthenticatedRequest, res, next),
+);
+router.get('/email-providers', adminOnly, (req, res, next) =>
+  adminController.getEmailProviders(req as AuthenticatedRequest, res, next),
+);
+router.put('/email-providers', adminOnly, validate(updateEmailProviderConfigSchema), (req, res, next) =>
+  adminController.updateEmailProvider(req as AuthenticatedRequest, res, next),
+);
+router.post('/email-providers/test', adminOnly, validate(testEmailProviderSchema), (req, res, next) =>
+  adminController.testEmailProvider(req as AuthenticatedRequest, res, next),
 );
 
 // ── Audit Log ─────────────────────────────────────────────────────────────────

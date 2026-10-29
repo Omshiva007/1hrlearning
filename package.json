@@ -7,25 +7,33 @@
     "packages/*"
   ],
   "scripts": {
-    "build": "turbo run build",
-    "dev": "turbo run dev",
-    "dev:frontend": "cd apps/frontend && npm run dev",
-    "dev:backend": "cd apps/backend && npm run dev",
-    "dev:admin": "cd apps/admin && npm run dev",
+    "build": "turbo run build --concurrency=1",
+    "dev": "node scripts/dev-stack.mjs",
+    "dev:apps": "turbo run dev",
+    "dev:frontend": "npm run dev --workspace=@1hrlearning/frontend",
+    "dev:backend": "npm run dev --workspace=@1hrlearning/backend",
+    "dev:admin": "npm run dev --workspace=@1hrlearning/admin",
+    "services:start": "node scripts/dev-services.mjs start",
+    "services:status": "node scripts/dev-services.mjs status",
     "lint": "turbo run lint",
     "test": "turbo run test",
+    "test:acceptance": "npm run test:integration --workspace=@1hrlearning/backend && npm run test:api --workspace=@1hrlearning/backend",
     "type-check": "turbo run type-check",
     "clean": "turbo run clean && rm -rf node_modules",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\""
   },
   "devDependencies": {
-    "turbo": "^2.0.0",
+    "embedded-postgres": "^16.14.0-beta.17",
     "prettier": "^3.2.5",
+    "turbo": "^2.0.0",
     "typescript": "^5.4.5"
   },
   "engines": {
     "node": ">=20.0.0",
     "npm": ">=10.0.0"
   },
-  "packageManager": "npm@10.5.0"
+  "packageManager": "npm@10.5.0",
+  "allowScripts": {
+    "@embedded-postgres/windows-x64@16.14.0-beta.17": true
+  }
 }

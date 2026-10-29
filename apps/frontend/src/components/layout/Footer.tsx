@@ -55,22 +55,22 @@ export function Footer() {
             </h3>
             <ul className="space-y-2 text-sm text-gray-300">
               <li>
-                <a href="#" className="transition-colors hover:text-white">
+                <Link href="/info/about" className="transition-colors hover:text-white">
                   About
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="#" className="transition-colors hover:text-white">
+                <Link href="/info/points" className="transition-colors hover:text-white">
                   How points work
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="#" className="transition-colors hover:text-white">
+                <Link href="/info/safety" className="transition-colors hover:text-white">
                   Trust and safety
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="#" className="transition-colors hover:text-white">
+                <a href="mailto:support@1hrlearning.com" className="transition-colors hover:text-white">
                   Contact
                 </a>
               </li>
@@ -84,19 +84,19 @@ export function Footer() {
             </h3>
             <ul className="space-y-2 text-sm text-gray-300">
               <li>
-                <a href="#" className="transition-colors hover:text-white">
+                <Link href="/info/privacy" className="transition-colors hover:text-white">
                   Privacy policy
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="#" className="transition-colors hover:text-white">
+                <Link href="/info/terms" className="transition-colors hover:text-white">
                   Terms of service
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="#" className="transition-colors hover:text-white">
+                <Link href="/info/cookies" className="transition-colors hover:text-white">
                   Cookie policy
-                </a>
+                </Link>
               </li>
             </ul>
           </div>
@@ -109,12 +109,12 @@ export function Footer() {
               © 2026 Open Knowledge Exchange. All rights reserved.
             </p>
             <div className="flex gap-4 text-xs text-gray-500">
-              <a href="#" className="transition-colors hover:text-gray-300">
+              <Link href="/info/privacy" className="transition-colors hover:text-gray-300">
                 Privacy
-              </a>
-              <a href="#" className="transition-colors hover:text-gray-300">
+              </Link>
+              <Link href="/info/terms" className="transition-colors hover:text-gray-300">
                 Terms
-              </a>
+              </Link>
             </div>
           </div>
         </div>

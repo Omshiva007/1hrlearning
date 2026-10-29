@@ -1,3 +1,3 @@
-// Audit-log administration is intentionally represented by the shared not-yet-implemented resource shell.
-import { AdminResourcePage } from '@/components/AdminResourcePage';
-export default function Page() { return <AdminResourcePage title="Audit Log" description="Review administrative actions and their before/after values." endpoint="/admin/audit-log?limit=100" />; }
+// Audit history remains read-only so evidence cannot be altered from the operator interface.
+import { OperationalAdminPage } from '@/components/OperationalAdminPage';
+export default function Page() { return <OperationalAdminPage mode="audit" />; }

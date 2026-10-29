@@ -1,3 +1,3 @@
-// Analytics is intentionally represented by the shared not-yet-implemented resource shell.
-import { AdminResourcePage } from '@/components/AdminResourcePage';
-export default function Page() { return <AdminResourcePage title="Analytics" description="Platform usage, matching, session, and economy metrics." endpoint="/admin/analytics" />; }
+// Analytics defaults to the activation funnel and uses server-computed operational evidence.
+import { OperationalAdminPage } from '@/components/OperationalAdminPage';
+export default function Page() { return <OperationalAdminPage mode="analytics" />; }

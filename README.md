@@ -43,7 +43,7 @@
 | ORM | Prisma |
 | Database | PostgreSQL 16 |
 | Cache / Queue | Redis 7, Bull |
-| Email | SendGrid |
+| Email | Runtime-selectable Resend or SendGrid; encrypted credentials managed by administrators |
 | Monitoring | Winston, Sentry |
 | DevOps | Docker Compose, GitHub Actions |
 
@@ -78,7 +78,6 @@
 ### Prerequisites
 
 - Node.js >= 20
-- Docker & Docker Compose
 - npm >= 10
 
 ### Development Setup
@@ -88,28 +87,38 @@
 git clone https://github.com/Omshiva007/1hrlearning.git
 cd 1hrlearning
 
-# 2. Copy environment files
-cp .env.example .env
-cp apps/backend/.env.example apps/backend/.env
-cp apps/frontend/.env.example apps/frontend/.env
-
-# 3. Start infrastructure (PostgreSQL + Redis)
-docker compose up postgres redis -d
-
-# 4. Install dependencies
+# 2. Install dependencies
 npm install
 
-# 5. Run database migrations
-cd apps/backend && npx prisma migrate dev && cd ../..
-
-# 6. Seed database (creates admin + sample users in dev)
-cd apps/backend && npm run db:seed && cd ../..
-
-# 7. Start development servers
+# 3. Start infrastructure, apply migrations, repair test fixtures, and launch all apps
 npm run dev
 ```
 
-The frontend runs at **http://localhost:3000** and the API at **http://localhost:4000**.
+`npm run dev` owns only the 1hrLearning children it starts and reports readiness for:
+
+- User app: **http://localhost:3100**
+- Admin app: **http://localhost:3101**
+- API: **http://localhost:4000**
+- PostgreSQL: **127.0.0.1:55432**
+- Redis: **127.0.0.1:56379**
+
+Press Ctrl+C in that terminal to stop this stack. Startup refuses to reuse an occupied port, so another local project is never silently replaced.
+
+### Verification
+
+With `npm run dev` running, execute the local acceptance checks from another terminal:
+
+```bash
+npm run type-check
+npm run test
+npm run test:acceptance
+npm run lint
+npm run build
+```
+
+`test:acceptance` exercises the real isolated PostgreSQL/API lifecycle, including transactional point settlement, concurrent public-session acceptance, token rotation/logout, matching/privacy, calendar export, and admin role gates. Production builds run workspace builds sequentially because concurrent Next.js type generation can trigger intermittent Windows `EPERM` failures.
+
+Resend sandbox delivery was verified through Admin → Configuration using the hosted `onboarding@resend.dev` sender and the account-owner inbox. Replace the encrypted API key and sender address in the same panel after verifying the production domain; no code change is required.
 
 ### Docker (Full Stack)
 

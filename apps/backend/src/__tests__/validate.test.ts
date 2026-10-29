@@ -3,7 +3,7 @@
  * Run with: npx ts-node-dev --transpile-only src/__tests__/validate.test.ts
  */
 
-import { z } from 'zod';
+import { z } from 'zod/v3';
 import { validate } from '../middleware/validate';
 import { AppError } from '../types';
 

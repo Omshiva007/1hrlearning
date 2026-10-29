@@ -8,6 +8,8 @@ import { SKILL_CATEGORIES, POINTS, POINT_CONFIG_KEYS, PLATFORM_CONFIG_KEYS } fro
 import { pointsService } from '../services/points.service';
 import { notificationService } from '../services/notification.service';
 import { emailService } from '../services/email.service';
+import { emailProviderService, type EmailProvider } from '../services/email-provider.service';
+import { sessionsService } from '../services/sessions.service';
 
 function slugify(text: string): string {
   return text.toLowerCase().replace(/[^\w\s-]/g, '').replace(/[\s_-]+/g, '-').replace(/^-+|-+$/g, '');
@@ -98,6 +100,12 @@ export const adminController = {
         take: 5,
       });
 
+      const topicIds = [...new Set([...topLearnerTopics, ...topSharerTopics].map((topic) => topic.skillId))];
+      const topicNames = new Map(
+        (await prisma.skill.findMany({ where: { id: { in: topicIds } }, select: { id: true, name: true } }))
+          .map((skill) => [skill.id, skill.name]),
+      );
+
       const data = {
         healthMetrics: {
           totalUsers,
@@ -110,8 +118,9 @@ export const adminController = {
           pointsInCirculation: pointsInCirculation._sum.pointsBalance ?? 0,
           openFlags,
         },
-        topLearnerTopics,
-        topSharerTopics,
+        // Resolve identifiers here so every admin consumer receives operator-readable metrics.
+        topLearnerTopics: topLearnerTopics.map((topic) => ({ ...topic, name: topicNames.get(topic.skillId) ?? 'Unknown skill' })),
+        topSharerTopics: topSharerTopics.map((topic) => ({ ...topic, name: topicNames.get(topic.skillId) ?? 'Unknown skill' })),
       };
 
       await cacheSet(cacheKey, data, 300);
@@ -506,26 +515,31 @@ export const adminController = {
 
       switch (action) {
         case 'OVERRIDE_NO_SHOW_LEARNER':
-          if (session.learnerId) {
-            await prisma.session.update({ where: { id }, data: { status: 'COMPLETED', completedAt: new Date() } });
-          }
+          if (!await sessionsService.completeSessionAsAdmin(id)) throw new AppError('Session was already settled', 409);
           break;
         case 'OVERRIDE_NO_SHOW_SHARER':
-          if (session.learnerId) {
-            await prisma.session.update({ where: { id }, data: { status: 'CANCELLED', cancelledAt: new Date(), cancelReason: reason } });
-          }
+          if (!await sessionsService.cancelSessionAsAdmin(id, reason)) throw new AppError('Session state changed', 409);
           break;
         case 'MANUALLY_COMPLETE':
-          await prisma.session.update({ where: { id }, data: { status: 'COMPLETED', completedAt: new Date() } });
+          if (!await sessionsService.completeSessionAsAdmin(id)) throw new AppError('Session was already settled', 409);
           break;
         case 'CANCEL':
-          await prisma.session.update({ where: { id }, data: { status: 'CANCELLED', cancelledAt: new Date(), cancelReason: reason } });
+          if (!await sessionsService.cancelSessionAsAdmin(id, reason)) throw new AppError('Session state changed', 409);
           break;
         case 'REVERSE_POINTS': {
-          const txs = await prisma.pointTransaction.findMany({ where: { sessionId: id } });
-          for (const tx of txs) {
-            await prisma.user.update({ where: { id: tx.userId }, data: { pointsBalance: { decrement: tx.amount } } });
-          }
+          await prisma.$transaction(async (db) => {
+            // Claim a settled session so repeated administrative reversals cannot move balances twice.
+            const claimed = await db.session.updateMany({ where: { id, pointsTransferred: { gt: 0 } }, data: { pointsTransferred: 0 } });
+            if (claimed.count !== 1) throw new AppError('Session points are not settled or were already reversed', 409);
+            const ledger = await db.pointTransaction.findMany({ where: { sessionId: id, type: { in: ['SPENT_LEARNING', 'EARNED_TEACHING'] } } });
+            for (const entry of ledger) {
+              const user = await db.user.update({ where: { id: entry.userId }, data: { pointsBalance: { decrement: entry.amount } } });
+              await db.pointTransaction.create({ data: {
+                userId: entry.userId, sessionId: id, type: entry.amount < 0 ? 'ADMIN_GRANT' : 'ADMIN_DEDUCT',
+                amount: -entry.amount, balanceAfter: user.pointsBalance, description: `Administrative reversal: ${reason}`, adminNote: reason,
+              } });
+            }
+          });
           break;
         }
       }
@@ -823,6 +837,40 @@ export const adminController = {
       await writeAuditLog(req.user.id, 'UPDATE_PLATFORM_CONFIG', 'PLATFORM_CONFIG', key, reason, { value: before }, { value }, req.ip);
 
       res.json({ success: true, message: `Platform config '${key}' updated` });
+    } catch (error) { next(error); }
+  },
+
+  async getEmailProviders(_req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+    try {
+      res.json({ success: true, data: await emailProviderService.list() });
+    } catch (error) { next(error); }
+  },
+
+  async updateEmailProvider(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { provider, fromEmail, fromName, apiKey, activate, reason } = req.body as {
+        provider: EmailProvider; fromEmail: string; fromName: string; apiKey?: string; activate: boolean; reason: string;
+      };
+      const before = (await emailProviderService.list()).find((item) => item.provider === provider);
+      const updated = await emailProviderService.configure({ provider, fromEmail, fromName, apiKey, activate, updatedById: req.user.id });
+      // Credential values and ciphertext are intentionally excluded from both response and audit evidence.
+      await writeAuditLog(req.user.id, 'UPDATE_EMAIL_PROVIDER', 'EMAIL_PROVIDER', provider, reason,
+        before ? { provider: before.provider, fromEmail: before.fromEmail, fromName: before.fromName, isActive: before.isActive, isConfigured: before.isConfigured } : undefined,
+        { provider: updated.provider, fromEmail: updated.fromEmail, fromName: updated.fromName, isActive: updated.isActive, isConfigured: updated.isConfigured }, req.ip);
+      res.json({ success: true, data: updated, message: `${provider} email configuration saved` });
+    } catch (error) { next(error); }
+  },
+
+  async testEmailProvider(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { provider, recipient } = req.body as { provider?: EmailProvider; recipient: string };
+      const result = await emailProviderService.send({
+        to: recipient,
+        subject: '1hrLearning email configuration test',
+        html: '<h1>Email configuration works</h1><p>This test confirms that your selected 1hrLearning email provider can deliver messages.</p>',
+      }, provider);
+      await writeAuditLog(req.user.id, 'TEST_EMAIL_PROVIDER', 'EMAIL_PROVIDER', provider ?? result.provider, `Test sent to ${recipient}`, undefined, { provider: result.provider }, req.ip);
+      res.json({ success: true, data: result, message: `Test email processed by ${result.provider}` });
     } catch (error) { next(error); }
   },
 

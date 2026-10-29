@@ -31,7 +31,8 @@ export class BackgroundJobsService {
       try {
         if (user.email) {
           const completionUrl = `${process.env.FRONTEND_URL || 'https://1hrlearning.com'}/onboarding`;
-          await emailService.sendOnboardingReminder(user.email, user.displayName, completionUrl);
+          const delivered = await emailService.sendOnboardingReminder(user.email, user.displayName, completionUrl);
+          if (!delivered) continue;
 
           await prisma.user.update({
             where: { id: user.id },
@@ -78,12 +79,13 @@ export class BackgroundJobsService {
 
         if (user?.email && record._sum.amount) {
           const expiryDate = new Date(sixMonthsAgo.getTime() + 180 * 24 * 60 * 60 * 1000);
-          await emailService.sendPointsExpiryWarning(
+          const delivered = await emailService.sendPointsExpiryWarning(
             user.email,
             user.displayName,
             record._sum.amount,
             expiryDate,
           );
+          if (!delivered) continue;
           sent++;
         }
       } catch (error) {
@@ -125,13 +127,13 @@ export class BackgroundJobsService {
           );
           const reengagementUrl = `${process.env.FRONTEND_URL || 'https://1hrlearning.com'}/discover`;
 
-          await emailService.sendReEngagementEmail(
+          const delivered = await emailService.sendReEngagementEmail(
             user.email,
             user.displayName,
             daysSinceActive,
             reengagementUrl,
           );
-
+          if (!delivered) continue;
           sent++;
         }
       } catch (error) {

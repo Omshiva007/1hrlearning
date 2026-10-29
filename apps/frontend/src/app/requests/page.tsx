@@ -8,10 +8,18 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar } from '@/components/ui/avatar';
+import Image from 'next/image';
 
 type TabType = 'incoming' | 'outgoing';
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000/api/v1';
+
+interface RequestUser {
+  id: string;
+  displayName: string;
+  username: string;
+  avatarUrl?: string;
+}
 
 interface Request {
   id: string;
@@ -19,12 +27,8 @@ interface Request {
   skill: { name: string };
   scheduledAt?: string;
   createdAt: string;
-  user: {
-    id: string;
-    displayName: string;
-    username: string;
-    avatarUrl?: string;
-  };
+  teacher: RequestUser;
+  learner: RequestUser | null;
 }
 
 export default function RequestsPage() {
@@ -65,6 +69,7 @@ export default function RequestsPage() {
 
   const requests = tab === 'incoming' ? incomingQuery.data?.data || [] : outgoingQuery.data?.data || [];
   const isLoading = tab === 'incoming' ? incomingQuery.isLoading : outgoingQuery.isLoading;
+  const activeError = tab === 'incoming' ? incomingQuery.error : outgoingQuery.error;
 
   return (
     <div className="container mx-auto max-w-4xl px-4 py-8">
@@ -93,26 +98,29 @@ export default function RequestsPage() {
       {/* Requests list */}
       {isLoading ? (
         <div className="text-center py-12 text-muted-foreground">Loading...</div>
+      ) : activeError ? (
+        <div role="alert" className="text-center py-12 text-destructive">Unable to load requests. Check your connection and retry.</div>
       ) : requests.length === 0 ? (
         <div className="text-center py-12 text-muted-foreground">
           No {tab === 'incoming' ? 'incoming' : 'outgoing'} requests yet
         </div>
       ) : (
         <div className="space-y-4">
-          {requests.map((request: Request) => (
-            <Card key={request.id} className="p-4">
+          {requests.map((request: Request) => {
+            // The counterpart is derived from explicit session roles; the API never returns a synthetic request.user field.
+            const counterpart = tab === 'incoming' ? request.learner : request.teacher;
+            if (!counterpart) return null;
+            return <Card key={request.id} className="p-4">
               <div className="flex items-start justify-between gap-4">
                 <div className="flex items-start gap-3 flex-1">
-                  <Avatar className="w-10 h-10">
-                    {request.user.avatarUrl && (
-                      <img src={request.user.avatarUrl} alt={request.user.displayName} />
-                    )}
+                  <Avatar className="w-10 h-10 relative overflow-hidden">
+                    {counterpart.avatarUrl ? <Image unoptimized src={counterpart.avatarUrl} alt={counterpart.displayName} fill sizes="40px" /> : <span className="m-auto">{counterpart.displayName.slice(0, 1)}</span>}
                   </Avatar>
                   <div className="flex-1">
-                    <Link href={`/profile/${request.user.username}`} className="font-semibold hover:underline">
-                      {request.user.displayName}
+                    <Link href={`/profile/${counterpart.username}`} className="font-semibold hover:underline">
+                      {counterpart.displayName}
                     </Link>
-                    <p className="text-sm text-muted-foreground">wants to learn {request.skill.name}</p>
+                    <p className="text-sm text-muted-foreground">{tab === 'incoming' ? `wants to learn ${request.skill.name}` : `will teach you ${request.skill.name}`}</p>
                     {request.scheduledAt && (
                       <p className="text-xs text-muted-foreground mt-1">
                         {new Date(request.scheduledAt).toLocaleString()}
@@ -129,8 +137,8 @@ export default function RequestsPage() {
                   </Link>
                 </div>
               </div>
-            </Card>
-          ))}
+            </Card>;
+          })}
         </div>
       )}
     </div>

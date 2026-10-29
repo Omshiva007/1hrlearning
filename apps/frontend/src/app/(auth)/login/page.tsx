@@ -1,7 +1,7 @@
 // Login validates user input locally before delegating credential verification to NextAuth and the backend.
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -10,10 +10,16 @@ import { Input } from '@/components/ui/input';
 
 export default function LoginPage() {
   const router = useRouter();
+  const [sessionExpired, setSessionExpired] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    // Read the recovery reason after hydration so the otherwise-static login page remains buildable.
+    setSessionExpired(new URLSearchParams(window.location.search).get('reason') === 'session-expired');
+  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -46,6 +52,9 @@ export default function LoginPage() {
           <p className="text-muted-foreground mt-2">
             Welcome back to 1hrLearning
           </p>
+          {sessionExpired && (
+            <p role="status" className="mt-3 text-sm text-amber-700">Your session expired. Sign in again to continue.</p>
+          )}
         </div>
 
         <form onSubmit={(e) => void handleSubmit(e)} className="space-y-4">
