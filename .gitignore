@@ -52,3 +52,4 @@ Thumbs.db
 .cache/
 tmp/
 .runtime/
+.vercel
