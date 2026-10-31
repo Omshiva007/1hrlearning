@@ -27,7 +27,9 @@ export function CTASection() {
         <Button
           variant="outline"
           size="lg"
-          className="border-green-mid text-green-light hover:bg-white/10"
+          // Both entry points create an account, while onboarding then explicitly captures teaching skills.
+          onClick={() => router.push('/register')}
+          className="border-white bg-white font-semibold text-green-dark hover:bg-green-light hover:text-green-dark"
         >
           Become a founding sharer
         </Button>
