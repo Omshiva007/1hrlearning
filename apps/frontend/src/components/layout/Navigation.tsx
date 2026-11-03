@@ -15,7 +15,8 @@ export function Navigation() {
   };
 
   return (
-    <nav className="sticky top-0 z-50 border-b border-border bg-bg-card">
+    // An opaque sticky surface prevents the section being scrolled from visually merging with navigation controls.
+    <nav className="sticky top-0 z-50 border-b border-border bg-card shadow-sm">
       <div className="flex items-center justify-between gap-3 px-4 py-4 sm:px-6 lg:px-10">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2">
