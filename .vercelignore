@@ -1,0 +1,2 @@
+# Local runtime data and browser-audit profiles are never deployment inputs.
+.runtime/
