@@ -5,9 +5,9 @@ import Link from 'next/link';
 export function Footer() {
   return (
     <footer className="border-t border-border bg-text-primary text-white">
-      <div className="px-10 py-14">
+      <div className="px-4 py-12 sm:px-6 lg:px-10 lg:py-14">
         {/* Top Section */}
-        <div className="mb-10 grid grid-cols-4 gap-8">
+        <div className="mb-10 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
           {/* Brand */}
           <div>
             <div className="mb-2 flex items-center gap-2">
@@ -104,7 +104,7 @@ export function Footer() {
 
         {/* Bottom Section */}
         <div className="border-t border-gray-700 pt-5">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-xs text-gray-500">
               © 2026 Open Knowledge Exchange. All rights reserved.
             </p>

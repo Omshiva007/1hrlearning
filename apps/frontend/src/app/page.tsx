@@ -27,13 +27,13 @@ export default function HomePage() {
         <StatsBar />
         <HowItWorks />
         <section className="bg-bg-secondary">
-          <div className="px-10 py-16">
-            <div className="grid grid-cols-2 gap-12 items-center">
+          <div className="px-4 py-12 sm:px-6 sm:py-16 lg:px-10">
+            <div className="grid grid-cols-1 items-center gap-8 lg:grid-cols-2 lg:gap-12">
               <div>
                 <p className="mb-2 text-xs font-bold uppercase tracking-wider text-green-deep">
                   Skill matching
                 </p>
-                <h2 className="mb-3 font-serif text-4xl font-bold text-text-primary">
+                <h2 className="mb-3 font-serif text-3xl font-bold text-text-primary sm:text-4xl">
                   Your perfect learning partner is already here
                 </h2>
                 <p className="mb-6 max-w-md text-base text-text-secondary">
@@ -49,14 +49,14 @@ export default function HomePage() {
                 ].map((match, idx) => (
                   <div
                     key={idx}
-                    className="flex items-center gap-3 rounded-2xl border border-border bg-white p-4 hover:bg-bg-secondary transition"
+                    className="flex flex-col gap-3 rounded-2xl border border-border bg-white p-4 transition hover:bg-bg-secondary sm:flex-row sm:items-center"
                   >
                     <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-light text-xs font-semibold text-green-dark">
                       {match.avatar}
                     </div>
-                    <div className="flex-1">
+                    <div className="min-w-0 flex-1">
                       <p className="font-semibold text-sm text-text-primary">{match.name}</p>
-                      <div className="flex gap-2 text-xs">
+                      <div className="flex flex-wrap gap-2 text-xs">
                         <span className="inline-block rounded-full bg-green-light px-2 py-1 text-green-dark">
                           Teaches: {match.teaches}
                         </span>
@@ -65,7 +65,7 @@ export default function HomePage() {
                         </span>
                       </div>
                     </div>
-                    <div className="text-right">
+                    <div className="self-start text-left sm:self-center sm:text-right">
                       <div className="font-bold text-green">{match.score}</div>
                       <div className="text-xs text-text-tertiary">match</div>
                     </div>

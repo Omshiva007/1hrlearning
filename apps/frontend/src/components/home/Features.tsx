@@ -48,12 +48,12 @@ export function Features() {
   ];
 
   return (
-    <section className="px-10 py-16">
+    <section className="px-4 py-12 sm:px-6 sm:py-16 lg:px-10">
       <div className="mb-8">
         <p className="mb-2 text-xs font-bold uppercase tracking-wider text-green-deep">
           Features
         </p>
-        <h2 className="mb-3 font-serif text-4xl font-bold text-text-primary">
+        <h2 className="mb-3 font-serif text-3xl font-bold text-text-primary sm:text-4xl">
           Everything you need to learn and teach
         </h2>
         <p className="max-w-lg text-base text-text-secondary">
@@ -61,7 +61,7 @@ export function Features() {
         </p>
       </div>
 
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
         {features.map((feature, idx) => (
           <div
             key={idx}

@@ -11,12 +11,16 @@ export function StatsBar() {
 
   return (
     <div className="border-b border-border">
-      <div className="grid grid-cols-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4">
         {stats.map((stat, idx) => (
           <div
             key={idx}
-            className={`border-r border-border py-6 text-center ${
-              idx === stats.length - 1 ? 'border-r-0' : ''
+            className={`border-b border-r border-border px-3 py-6 text-center lg:border-b-0 ${
+              idx % 2 === 1 ? 'border-r-0 lg:border-r' : ''
+            } ${
+              idx >= stats.length - 2 ? 'border-b-0' : ''
+            } ${
+              idx === stats.length - 1 ? 'lg:border-r-0' : ''
             }`}
           >
             <div className="text-2xl font-bold tracking-tight text-text-primary">

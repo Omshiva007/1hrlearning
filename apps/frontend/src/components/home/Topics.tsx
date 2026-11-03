@@ -21,12 +21,12 @@ export function Topics() {
   ];
 
   return (
-    <section className="bg-bg-secondary px-10 py-16" id="topics">
+    <section className="bg-bg-secondary px-4 py-12 sm:px-6 sm:py-16 lg:px-10" id="topics">
       <div className="mb-8">
         <p className="mb-2 text-xs font-bold uppercase tracking-wider text-green-deep">
           Topics
         </p>
-        <h2 className="mb-3 font-serif text-4xl font-bold text-text-primary">
+        <h2 className="mb-3 font-serif text-3xl font-bold text-text-primary sm:text-4xl">
           Find your topic
         </h2>
         <p className="text-base text-text-secondary">

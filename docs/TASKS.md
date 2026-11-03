@@ -154,6 +154,12 @@ Implement each page against its existing authorized endpoint; do not expose raw 
 
 ### P2 — Correct UX integrity and deployment configuration
 
+- [x] **P2.7 Repair public landing-page responsiveness**
+  - Remove mobile horizontal overflow and keep navigation/account actions reachable at 360–390 px.
+  - Stack fixed desktop grids and CTAs at mobile widths while preserving tablet and desktop hierarchy.
+  - Verify the deployed homepage at mobile, tablet, and desktop widths with captured layout metrics and screenshots.
+  - Verified 2026-11-03: production-style browser emulation reported viewport/document widths of `360/360`, `390/390`, `768/768`, and `1440/1440`; navigation and CTAs remained reachable, mobile sections stacked, tablet grids reflowed, and the desktop hierarchy remained intact. Frontend type-check and production build passed.
+
 - [x] **P2.1 Remove fabricated marketing metrics**
   - Replace fixed learner/session/rating numbers with verified live metrics or non-numeric product statements.
 - [x] **P2.2 Replace dead links and controls**

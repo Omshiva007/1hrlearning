@@ -42,12 +42,12 @@ export function HowItWorks() {
   ];
 
   return (
-    <section className="px-10 py-16" id="how-it-works">
+    <section className="px-4 py-12 sm:px-6 sm:py-16 lg:px-10" id="how-it-works">
       <div className="mb-8">
         <p className="mb-2 text-xs font-bold uppercase tracking-wider text-green-deep">
           How it works
         </p>
-        <h2 className="mb-3 font-serif text-4xl font-bold text-text-primary">
+        <h2 className="mb-3 font-serif text-3xl font-bold text-text-primary sm:text-4xl">
           Four steps to your first session
         </h2>
         <p className="max-w-lg text-base text-text-secondary">
@@ -55,7 +55,7 @@ export function HowItWorks() {
         </p>
       </div>
 
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {steps.map((step) => (
           <div
             key={step.num}

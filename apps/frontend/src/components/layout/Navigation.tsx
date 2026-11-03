@@ -16,7 +16,7 @@ export function Navigation() {
 
   return (
     <nav className="sticky top-0 z-50 border-b border-border bg-bg-card">
-      <div className="flex items-center justify-between px-10 py-4">
+      <div className="flex items-center justify-between gap-3 px-4 py-4 sm:px-6 lg:px-10">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2">
           <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-green text-xs font-bold text-green-light">
@@ -27,8 +27,8 @@ export function Navigation() {
           </span>
         </Link>
 
-        {/* Links */}
-        <div className="flex items-center gap-8">
+        {/* Marketing anchors are supplementary on phones; hiding them keeps account actions reachable. */}
+        <div className="hidden items-center gap-8 md:flex">
           <a
             href="#how-it-works"
             className="text-sm text-text-secondary transition-colors hover:text-text-primary"
@@ -74,13 +74,14 @@ export function Navigation() {
                 size="sm"
                 onClick={() => router.push('/auth/register')}
               >
-                Get started free
+                <span className="sm:hidden">Get started</span>
+                <span className="hidden sm:inline">Get started free</span>
               </Button>
             </>
           )}
           {user && (
             <>
-              <div className="flex items-center gap-2">
+              <div className="hidden items-center gap-2 sm:flex">
                 <span className="text-sm text-text-primary">
                   {user.name || user.email}
                 </span>

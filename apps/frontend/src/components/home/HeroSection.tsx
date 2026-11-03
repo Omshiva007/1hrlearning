@@ -7,9 +7,9 @@ export function HeroSection() {
   const router = useRouter();
 
   return (
-    <section className="grid grid-cols-2 gap-0 bg-amber-light/20">
+    <section className="grid grid-cols-1 gap-0 bg-amber-light/20 lg:grid-cols-2">
       {/* Left Side */}
-      <div className="flex flex-col justify-center px-16 py-24">
+      <div className="flex flex-col justify-center px-4 py-16 sm:px-8 sm:py-20 lg:px-16 lg:py-24">
         {/* Eyebrow */}
         <div className="mb-6 inline-flex w-fit items-center gap-2 rounded-full bg-green-light px-4 py-2">
           <span className="text-xs font-semibold text-green-dark">
@@ -18,7 +18,7 @@ export function HeroSection() {
         </div>
 
         {/* Headline */}
-        <h1 className="mb-4 font-serif text-5xl font-bold leading-tight text-text-primary">
+        <h1 className="mb-4 font-serif text-4xl font-bold leading-tight text-text-primary sm:text-5xl">
           Share what you know.<br />
           <span className="text-green">Learn what you don&apos;t.</span>
         </h1>
@@ -30,11 +30,11 @@ export function HeroSection() {
         </p>
 
         {/* CTA Buttons */}
-        <div className="mb-8 flex gap-3">
+        <div className="mb-8 flex flex-col gap-3 sm:flex-row">
           <Button
             size="lg"
             onClick={() => router.push('/register')}
-            className="font-semibold"
+            className="w-full font-semibold sm:w-auto"
           >
             Start learning free →
           </Button>
@@ -44,14 +44,14 @@ export function HeroSection() {
             onClick={() =>
               document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' })
             }
-            className="font-semibold"
+            className="w-full font-semibold sm:w-auto"
           >
             See how it works
           </Button>
         </div>
 
         {/* Social Proof */}
-        <div className="flex items-center gap-4">
+        <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:gap-4">
           <div className="flex -space-x-2">
             <div className="flex h-7 w-7 items-center justify-center rounded-full border-2 border-bg-card bg-green-light text-xs font-semibold text-green-dark">
               AR
@@ -71,8 +71,8 @@ export function HeroSection() {
       </div>
 
       {/* Right Side - Illustration Placeholder */}
-      <div className="relative flex items-center justify-center bg-amber-light/30">
-        <div className="relative h-80 w-80 rounded-3xl bg-amber-light/50">
+      <div className="relative flex items-center justify-center overflow-hidden bg-amber-light/30 px-4 py-12 sm:px-8 lg:py-0">
+        <div className="relative h-72 w-full max-w-80 rounded-3xl bg-amber-light/50 sm:h-80">
           {/* Placeholder illustration */}
           <div className="absolute inset-0 flex flex-col items-center justify-center">
             <div className="text-center">
