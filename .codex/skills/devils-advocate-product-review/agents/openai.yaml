@@ -1,0 +1,4 @@
+interface:
+  display_name: "Devils Advocate Product Review"
+  short_description: "Challenge completion and workflow coverage claims"
+  default_prompt: "Use $devils-advocate-product-review to audit this product's completion and end-to-end coverage."
